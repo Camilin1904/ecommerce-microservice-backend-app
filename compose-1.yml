@@ -1,0 +1,13 @@
+services:
+  zipkin-container:
+    image: openzipkin/zipkin
+    ports:
+      - 9411:9411
+  service-discovery-container:
+    build:
+      context: ./service-discovery
+    ports:
+      - 8761:8761
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_ZIPKIN_BASE_URL=http://zipkin-container:9411/

@@ -1,7 +1,9 @@
-
 spring:
   zipkin:
     base-url: ${SPRING_ZIPKIN_BASE_URL:http://localhost:9411/}
+  cloud:
+    config:
+      enabled: false
   application:
     name: SERVICE-DISCOVERY
   profiles:
@@ -29,6 +31,11 @@ management:
   endpoint:
     health:
       show-details: always
+
+eureka:
+  server:
+    eviction-interval-timer-in-ms: 600000 # 10 minutes (default is 60,000 ms = 1 minute)
+    enable-self-preservation: true # (default) prevents eviction if too many instances are lost
 
 
 
