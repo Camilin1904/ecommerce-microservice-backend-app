@@ -1,0 +1,102 @@
+pipeline {
+    agent any
+    
+    environment {
+        PROJECT_VERSION = '0.1.0'
+        KUBE_CONFIG = credentials('kubernetes-config')
+        TAG = "${env.BUILD_NUMBER}"
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Build Services') {
+            steps {
+                sh 'mvn clean package -DskipTests'
+            }
+        }
+        
+        stage('Build Docker Images') {
+            steps {
+                script {
+                    // Build each service image from its Dockerfile
+                    def services = ['service-discovery', 'api-gateway', 'order-service', 'payment-service', 
+                                   'product-service', 'shipping-service', 'user-service', 'favourite-service', 'proxy-client']
+                    
+                    services.each { service ->
+                        sh "docker build -t ${service}:${TAG} -f ${service}/Dockerfile ${service}"
+                        // Tag for local kubernetes use
+                        sh "docker tag ${service}:${TAG} localhost:5000/${service}:${TAG}"
+                        // Push to local registry for kubernetes 
+                        sh "docker push localhost:5000/${service}:${TAG}"
+                    }
+                }
+            }
+        }
+        
+        stage('Update Kubernetes Manifests') {
+            steps {
+                script {
+                    // Update the image references in kubernetes manifests
+                    sh """
+                        sed -i 's|\\\${DOCKER_REGISTRY}/service-discovery:\\\${TAG}|localhost:5000/service-discovery:${TAG}|g' kubernetes/service-discovery.yaml
+                        sed -i 's|\\\${DOCKER_REGISTRY}/api-gateway:\\\${TAG}|localhost:5000/api-gateway:${TAG}|g' kubernetes/api-gateway.yaml
+                        # Update other manifest files similarly
+                    """
+                }
+            }
+        }
+        
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    // Set up kubeconfig
+                    sh "mkdir -p ~/.kube"
+                    sh "echo '${KUBE_CONFIG}' > ~/.kube/config"
+                    
+                    // Create the namespace if it doesn't exist
+                    sh "kubectl apply -f kubernetes/namespace.yaml"
+                    
+                    // Deploy Zipkin first
+                    sh "kubectl apply -f kubernetes/zipkin.yaml"
+                    
+                    // Wait for Zipkin to be ready
+                    sh "kubectl wait --for=condition=available --timeout=300s deployment/zipkin -n ecommerce"
+                    
+                    // Deploy Service Discovery next
+                    sh "kubectl apply -f kubernetes/service-discovery.yaml"
+                    
+                    // Wait for Service Discovery to be ready
+                    sh "kubectl wait --for=condition=available --timeout=300s deployment/service-discovery -n ecommerce"
+                    
+                    // Deploy remaining services
+                    sh "kubectl apply -k kubernetes/"
+                }
+            }
+        }
+        
+        stage('Verify Deployment') {
+            steps {
+                script {
+                    sh "kubectl get all -n ecommerce"
+                    // Verify that all pods are running
+                    sh "kubectl wait --for=condition=ready pods --all -n ecommerce --timeout=300s"
+                    echo "All services deployed and running!"
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo 'Kubernetes deployment successful!'
+        }
+        failure {
+            echo 'Kubernetes deployment failed!'
+        }
+    }
+}
