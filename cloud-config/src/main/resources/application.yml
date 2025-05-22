@@ -21,11 +21,11 @@ spring:
 
 eureka:
   client:
-    register-with-eureka: true
-    fetch-registry: true
     service-url:
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://service-discovery-container:8761/eureka/}
-
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE:http://service-discovery-container:8761/eureka/}
+  instance:
+      hostname: ${EUREKA_INSTANCE:service-discovery-container}
+      
 resilience4j:
   circuitbreaker:
     instances:

@@ -3,6 +3,8 @@ server:
     context-path: /
 
 spring:
+  config:
+    import: optional:file:./  # Override default imports and use only local config
   zipkin:
     base-url: ${SPRING_ZIPKIN_BASE_URL:http://localhost:9411/}
   application:
@@ -13,6 +15,9 @@ spring:
   cloud:
     config:
       enabled: false
+      fail-fast: false  # Don't fail if config server is unavailable
+      discovery:
+        enabled: false  # Don't try to discover config server through service discovery
     gateway:
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin, RETAIN_UNIQUE
@@ -86,9 +91,9 @@ management:
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://service-discovery-container:8761/eureka/}
-
-
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE:http://service-discovery-container:8761/eureka/}
+  instance:
+      hostname: ${EUREKA_INSTANCE:service-discovery-container}
 
 
 

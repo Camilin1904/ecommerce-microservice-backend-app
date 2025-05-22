@@ -8,18 +8,18 @@ echo "Starting deployment in sequence..."
 # Step 1: Deploy Zipkin
 echo "Deploying Zipkin..."
 kubectl apply -f zipkin.yaml
-echo "Zipkin deployed. Waiting 30 seconds before deploying Service Discovery..."
+echo "Zipkin deployed. Waiting 1 minute before deploying Service Discovery..."
 
 # Wait 1 minute
-sleep 30
+sleep 60
 
 # Step 2: Deploy Service Discovery
 echo "Deploying Service Discovery..."
 kubectl apply -f service-discovery.yaml
-echo "Service Discovery deployed. Waiting 1 minutes before deploying remaining services..."
+echo "Service Discovery deployed. Waiting 2 minutes before deploying remaining services..."
 
 # Wait 5 minutes
-sleep 60
+sleep 120
 
 # Step 3: Deploy all remaining services
 echo "Deploying all remaining services..."
