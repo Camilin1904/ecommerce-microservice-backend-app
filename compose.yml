@@ -7,8 +7,7 @@ services:
     networks:
       - ecommerce-net
   service-discovery-container:
-    build:
-      context: ./service-discovery
+    image: camilin19/service-discovery:latest
     ports:
       - 8761:8761
     environment:
