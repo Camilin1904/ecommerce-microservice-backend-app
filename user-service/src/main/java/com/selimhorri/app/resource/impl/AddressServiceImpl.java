@@ -1,4 +1,4 @@
-package com.selimhorri.app.service.impl;
+package com.selimhorri.app.resource.impl;
 
 import java.util.List;
 import java.util.stream.Collectors;
