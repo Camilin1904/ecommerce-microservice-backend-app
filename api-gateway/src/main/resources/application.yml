@@ -93,7 +93,7 @@ eureka:
     service-url:
       defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE:http://service-discovery:8761/eureka/}
   instance:
-      hostname: ${EUREKA_INSTANCE:service-discovery-container}
+      hostname: ${EUREKA_INSTANCE:service-discovery}
 
 
 

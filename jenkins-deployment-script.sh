@@ -36,7 +36,7 @@ check_health "Zipkin" "http://localhost:9411/health" 12 5
 
 # Deploy Service Discovery
 echo "Deploying Service Discovery..."
-docker-compose -f compose.yml up -d service-discovery-container
+docker-compose -f compose.yml up -d service-discovery
 check_health "Service Discovery" "http://localhost:8761/actuator/health" 18 10
 
 # Deploy all other services

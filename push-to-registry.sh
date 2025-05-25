@@ -27,7 +27,7 @@ declare -A SERVICES=(
   ["payment-service"]="payment-service-container"
   ["product-service"]="product-service-container"
   ["user-service"]="user-service-container"
-  ["service-discovery"]="service-discovery-container"
+  ["service-discovery"]="service-discovery"
   ["shipping-service"]="shipping-service-container"
   ["proxy-client"]="proxy-client-container"
 )

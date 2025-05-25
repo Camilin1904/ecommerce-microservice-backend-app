@@ -53,7 +53,7 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying Service Discovery...'
-                    sh 'docker-compose -f ${COMPOSE_FILE} up -d service-discovery-container'
+                    sh 'docker-compose -f ${COMPOSE_FILE} up -d service-discovery'
                     
                     // Wait for Service Discovery to be healthy
                     timeout(time: 3, unit: 'MINUTES') {

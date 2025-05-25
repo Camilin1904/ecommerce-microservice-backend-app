@@ -17,7 +17,7 @@ echo "Zipkin is running!"
 
 # Step 2: Deploy Service Discovery
 echo "Deploying Service Discovery..."
-docker-compose up -d service-discovery-container
+docker-compose up -d service-discovery
 
 # Wait for Service Discovery to be healthy
 echo "Waiting for Service Discovery to be healthy..."
