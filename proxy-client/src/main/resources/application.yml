@@ -41,7 +41,12 @@ eureka:
     service-url:
       defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE:http://service-discovery:8761/eureka/}
   instance:
-      hostname: ${EUREKA_INSTANCE:service-discovery}
+      hostname: ${EUREKA_INSTANCE:proxy-client}
+
+ribbon:
+  eureka:
+    enabled: true
+  NIWSServerListClassName: com.netflix.niws.loadbalancer.DiscoveryEnabledNIWSServerList
 
 
 

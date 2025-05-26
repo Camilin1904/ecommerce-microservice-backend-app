@@ -16,8 +16,10 @@ spec:
     spec:
       containers:
       - name: api-gateway
-        image: camilin19/api-gateway:latest
+        image: api-gateway:latest
         imagePullPolicy: IfNotPresent
+        build:
+          context: ../api-gateway
         ports:
         - containerPort: 8080
         env:

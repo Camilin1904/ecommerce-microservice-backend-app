@@ -16,8 +16,10 @@ spec:
     spec:
       containers:
       - name: proxy-client
-        image: camilin19/proxy-client:latest
+        image: proxy-client:latest
         imagePullPolicy: IfNotPresent
+        build:
+          context: ../proxy-client
         ports:
         - containerPort: 8900
         env:
