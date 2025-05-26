@@ -44,6 +44,10 @@ eureka:
       hostname: ${EUREKA_INSTANCE:user-service}
 
 
+ribbon:
+  eureka:
+    enabled: true
+  NIWSServerListClassName: com.netflix.niws.loadbalancer.DiscoveryEnabledNIWSServerList
 
 
 
