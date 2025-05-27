@@ -46,11 +46,11 @@ pipeline {
                     echo 'Building and deploying services using Docker Compose...'
                     
                     // Build all services
-                    sh 'docker-compose -f ${COMPOSE_FILE} build'
+                    sh 'docker compose -f ${COMPOSE_FILE} build'
                     
                     // Deploy services in the right order
                     echo 'Starting Zipkin...'
-                    sh 'docker-compose -f ${COMPOSE_FILE} up -d zipkin'
+                    sh 'docker compose -f ${COMPOSE_FILE} up -d zipkin'
                     
                     // Wait for Zipkin to be ready
                     timeout(time: 2, unit: 'MINUTES') {
@@ -64,7 +64,7 @@ pipeline {
                     echo 'Zipkin is ready!'
                     
                     echo 'Starting Service Discovery...'
-                    sh 'docker-compose -f ${COMPOSE_FILE} up -d service-discovery'
+                    sh 'docker compose -f ${COMPOSE_FILE} up -d service-discovery'
                     
                     // Wait for Service Discovery to be ready
                     timeout(time: 3, unit: 'MINUTES') {
@@ -78,14 +78,14 @@ pipeline {
                     echo 'Service Discovery is ready!'
                     
                     echo 'Starting all other services...'
-                    sh 'docker-compose -f ${COMPOSE_FILE} up -d'
+                    sh 'docker compose -f ${COMPOSE_FILE} up -d'
                     
                     // Wait for services to be ready
                     echo 'Waiting for all services to be ready...'
                     sleep 120 // 2 minutes
                     
                     // Check if containers are running
-                    sh 'docker-compose -f ${COMPOSE_FILE} ps'
+                    sh 'docker compose -f ${COMPOSE_FILE} ps'
                 }
             }
         }
