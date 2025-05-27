@@ -6,8 +6,6 @@ pipeline {
         PROJECT_VERSION = '0.1.0'
         COMPOSE_FILE = 'compose.yml'
         API_GATEWAY_PORT = '8080'
-        JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
-        PATH = '/usr/lib/jvm/java-11-openjdk-amd64/bin:$PATH'
     }
     
     stages {
@@ -17,43 +15,26 @@ pipeline {
             }
         }
         
-        stage('Install Java 11') {
+        stage('Clean and Test with Java 11') {
             steps {
                 script {
-                    echo 'Installing Java 11...'
+                    echo 'Running tests in Java 11 Docker container...'
                     sh '''
-                        # Update package list
-                        apt-get update
-                        
-                        # Install Java 11
-                        apt-get install -y openjdk-11-jdk
-                        
-                        # Verify installation
-                        /usr/lib/jvm/java-11-openjdk-amd64/bin/java -version
-                    '''
-                }
-            }
-        }
-        
-        stage('Clean and Test') {
-            steps {
-                script {
-                    echo 'Running tests with Java 11...'
-                    sh '''
-                        # Set Java 11 as the active Java version
-                        export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-                        export PATH=$JAVA_HOME/bin:$PATH
-                        
-                        echo "Current Java version:"
-                        java -version
-                        echo "JAVA_HOME: $JAVA_HOME"
-                        
-                        chmod +x ./mvnw
-                        echo "Maven wrapper version:"
-                        ./mvnw -v
-                        
-                        echo "Running clean and test..."
-                        ./mvnw clean test
+                        # Run tests using a Java 11 Docker container
+                        docker run --rm \
+                            -v "$(pwd)":/workspace \
+                            -w /workspace \
+                            openjdk:11-jdk-slim \
+                            bash -c "
+                                echo 'Java version in container:'
+                                java -version
+                                
+                                echo 'Making mvnw executable...'
+                                chmod +x ./mvnw
+                                
+                                echo 'Running Maven tests...'
+                                ./mvnw clean test
+                            "
                     '''
                 }
             }
