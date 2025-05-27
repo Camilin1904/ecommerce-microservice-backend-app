@@ -1,11 +1,16 @@
 pipeline {
     agent any
     
+    tools {
+        jdk 'Java11'  // Ensure Java 11 is used
+    }
+    
     environment {
         DOCKER_REGISTRY = 'your-docker-registry'
         PROJECT_VERSION = '0.1.0'
         COMPOSE_FILE = 'compose.yml'
         API_GATEWAY_PORT = '8080'
+        JAVA_HOME = tool('Java11')  // Set JAVA_HOME to Java 11
     }
     
     stages {
@@ -17,7 +22,9 @@ pipeline {
         
         stage('Clean and Test') {
             steps {
-                echo 'Cleaning and running tests...'
+                echo 'Verifying Java version and cleaning/testing...'
+                sh 'java -version'
+                sh 'echo "JAVA_HOME: $JAVA_HOME"'
                 sh 'chmod +x ./mvnw'
                 sh './mvnw -v'
                 sh './mvnw clean test'
