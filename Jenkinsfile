@@ -40,42 +40,62 @@ pipeline {
             }
         }
         
-        stage('Deploy Services') {
+        stage('Build and Deploy Services') {
             steps {
                 script {
-                    echo 'Deploying services using Kubernetes...'
-                    sh 'chmod +x ./k8s/deploy-services.sh'
-                    sh './k8s/deploy-services.sh'
+                    echo 'Building and deploying services using Docker Compose...'
+                    
+                    // Build all services
+                    sh 'docker-compose -f ${COMPOSE_FILE} build'
+                    
+                    // Deploy services in the right order
+                    echo 'Starting Zipkin...'
+                    sh 'docker-compose -f ${COMPOSE_FILE} up -d zipkin'
+                    
+                    // Wait for Zipkin to be ready
+                    timeout(time: 2, unit: 'MINUTES') {
+                        sh '''
+                            until $(curl --output /dev/null --silent --head --fail http://localhost:9411/health); do
+                                printf 'Waiting for Zipkin...'
+                                sleep 5
+                            done
+                        '''
+                    }
+                    echo 'Zipkin is ready!'
+                    
+                    echo 'Starting Service Discovery...'
+                    sh 'docker-compose -f ${COMPOSE_FILE} up -d service-discovery'
+                    
+                    // Wait for Service Discovery to be ready
+                    timeout(time: 3, unit: 'MINUTES') {
+                        sh '''
+                            until $(curl --output /dev/null --silent --head --fail http://localhost:8761/actuator/health); do
+                                printf 'Waiting for Service Discovery...'
+                                sleep 10
+                            done
+                        '''
+                    }
+                    echo 'Service Discovery is ready!'
+                    
+                    echo 'Starting all other services...'
+                    sh 'docker-compose -f ${COMPOSE_FILE} up -d'
                     
                     // Wait for services to be ready
-                    echo 'Waiting for services to be ready...'
-                    sleep 180 // 3 minutes
+                    echo 'Waiting for all services to be ready...'
+                    sleep 120 // 2 minutes
                     
-                    // Check if pods are running
-                    sh 'kubectl get pods'
+                    // Check if containers are running
+                    sh 'docker-compose -f ${COMPOSE_FILE} ps'
                 }
             }
         }
         
-        stage('Port Forward API Gateway') {
+        stage('Verify API Gateway') {
             steps {
                 script {
-                    echo 'Setting up port forwarding for API Gateway on port 8080...'
-                    // Kill any existing port-forward processes on port 8080
-                    sh '''
-                        pkill -f "kubectl port-forward.*8080" || true
-                        sleep 5
-                    '''
-                    
-                    // Start port forwarding in background
-                    sh '''
-                        nohup kubectl port-forward service/api-gateway 8080:8080 > port-forward.log 2>&1 &
-                        echo $! > port-forward.pid
-                        sleep 10
-                    '''
-                    
-                    // Verify port forwarding is working
-                    timeout(time: 2, unit: 'MINUTES') {
+                    echo 'Verifying API Gateway is accessible on port 8080...'
+                    // The API Gateway should already be running on port 8080 from docker-compose
+                    timeout(time: 3, unit: 'MINUTES') {
                         sh '''
                             until $(curl --output /dev/null --silent --head --fail http://localhost:8080/actuator/health); do
                                 printf 'Waiting for API Gateway to be available on port 8080...'
@@ -83,7 +103,7 @@ pipeline {
                             done
                         '''
                     }
-                    echo 'API Gateway is now accessible on port 8080!'
+                    echo 'API Gateway is accessible on port 8080!'
                 }
             }
         }
@@ -107,8 +127,8 @@ pipeline {
             steps {
                 script {
                     echo 'Verifying all services are running...'
-                    sh 'kubectl get pods -o wide'
-                    sh 'kubectl get services'
+                    sh 'docker compose -f ${COMPOSE_FILE} ps'
+                    sh 'docker ps --format "table {{.Names}}\\t{{.Status}}\\t{{.Ports}}"'
                     
                     // Verify API Gateway is accessible
                     sh 'curl -s http://localhost:8080/actuator/health'
@@ -123,17 +143,6 @@ pipeline {
         always {
             // Archive E2E test reports
             archiveArtifacts artifacts: 'e2e/reports/**', allowEmptyArchive: true
-            
-            // Cleanup port forwarding
-            script {
-                sh '''
-                    if [ -f port-forward.pid ]; then
-                        kill $(cat port-forward.pid) || true
-                        rm port-forward.pid
-                    fi
-                    pkill -f "kubectl port-forward.*8080" || true
-                '''
-            }
         }
         success {
             echo 'Deployment and E2E tests completed successfully!'
@@ -142,17 +151,10 @@ pipeline {
         failure {
             echo 'Pipeline failed!'
             script {
-                // Cleanup on failure
+                // Cleanup on failure - stop all Docker Compose services
                 sh '''
-                    # Stop port forwarding
-                    if [ -f port-forward.pid ]; then
-                        kill $(cat port-forward.pid) || true
-                        rm port-forward.pid
-                    fi
-                    pkill -f "kubectl port-forward.*8080" || true
-                    
-                    # Optional: Cleanup Kubernetes deployments on failure
-                    # kubectl delete -f k8s/ || true
+                    echo "Cleaning up Docker Compose services..."
+                    docker compose -f ${COMPOSE_FILE} down || true
                 '''
             }
             // You can add notifications here (email, Slack, etc.)
