@@ -6,6 +6,8 @@ pipeline {
         PROJECT_VERSION = '0.1.0'
         COMPOSE_FILE = 'compose.yml'
         API_GATEWAY_PORT = '8080'
+        JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-amd64'
+        PATH = '/usr/lib/jvm/java-11-openjdk-amd64/bin:$PATH'
     }
     
     stages {
@@ -15,30 +17,34 @@ pipeline {
             }
         }
         
+        stage('Install Java 11') {
+            steps {
+                script {
+                    echo 'Installing Java 11...'
+                    sh '''
+                        # Update package list
+                        apt-get update
+                        
+                        # Install Java 11
+                        apt-get install -y openjdk-11-jdk
+                        
+                        # Verify installation
+                        /usr/lib/jvm/java-11-openjdk-amd64/bin/java -version
+                    '''
+                }
+            }
+        }
+        
         stage('Clean and Test') {
             steps {
                 script {
-                    echo 'Setting up Java 11 and running tests...'
-                    
-                    // Try to find and set Java 11
+                    echo 'Running tests with Java 11...'
                     sh '''
-                        # Try to find Java 11 installation
-                        if [ -n "$JAVA_HOME_11_X64" ]; then
-                            export JAVA_HOME="$JAVA_HOME_11_X64"
-                        elif [ -d "/usr/lib/jvm/java-11-openjdk-amd64" ]; then
-                            export JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"
-                        elif [ -d "/usr/lib/jvm/java-11-openjdk" ]; then
-                            export JAVA_HOME="/usr/lib/jvm/java-11-openjdk"
-                        elif command -v java >/dev/null 2>&1; then
-                            echo "Using system default Java"
-                        else
-                            echo "No Java installation found"
-                            exit 1
-                        fi
+                        # Set Java 11 as the active Java version
+                        export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+                        export PATH=$JAVA_HOME/bin:$PATH
                         
-                        export PATH="$JAVA_HOME/bin:$PATH"
-                        
-                        echo "Java version being used:"
+                        echo "Current Java version:"
                         java -version
                         echo "JAVA_HOME: $JAVA_HOME"
                         
