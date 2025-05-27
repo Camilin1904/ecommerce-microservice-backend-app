@@ -1,16 +1,11 @@
 pipeline {
     agent any
     
-    tools {
-        jdk 'Java11'  // Ensure Java 11 is used
-    }
-    
     environment {
         DOCKER_REGISTRY = 'your-docker-registry'
         PROJECT_VERSION = '0.1.0'
         COMPOSE_FILE = 'compose.yml'
         API_GATEWAY_PORT = '8080'
-        JAVA_HOME = tool('Java11')  // Set JAVA_HOME to Java 11
     }
     
     stages {
@@ -22,12 +17,39 @@ pipeline {
         
         stage('Clean and Test') {
             steps {
-                echo 'Verifying Java version and cleaning/testing...'
-                sh 'java -version'
-                sh 'echo "JAVA_HOME: $JAVA_HOME"'
-                sh 'chmod +x ./mvnw'
-                sh './mvnw -v'
-                sh './mvnw clean test'
+                script {
+                    echo 'Setting up Java 11 and running tests...'
+                    
+                    // Try to find and set Java 11
+                    sh '''
+                        # Try to find Java 11 installation
+                        if [ -n "$JAVA_HOME_11_X64" ]; then
+                            export JAVA_HOME="$JAVA_HOME_11_X64"
+                        elif [ -d "/usr/lib/jvm/java-11-openjdk-amd64" ]; then
+                            export JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"
+                        elif [ -d "/usr/lib/jvm/java-11-openjdk" ]; then
+                            export JAVA_HOME="/usr/lib/jvm/java-11-openjdk"
+                        elif command -v java >/dev/null 2>&1; then
+                            echo "Using system default Java"
+                        else
+                            echo "No Java installation found"
+                            exit 1
+                        fi
+                        
+                        export PATH="$JAVA_HOME/bin:$PATH"
+                        
+                        echo "Java version being used:"
+                        java -version
+                        echo "JAVA_HOME: $JAVA_HOME"
+                        
+                        chmod +x ./mvnw
+                        echo "Maven wrapper version:"
+                        ./mvnw -v
+                        
+                        echo "Running clean and test..."
+                        ./mvnw clean test
+                    '''
+                }
             }
         }
         
