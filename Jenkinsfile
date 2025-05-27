@@ -19,6 +19,7 @@ pipeline {
             steps {
                 echo 'Cleaning and running tests...'
                 sh 'chmod +x ./mvnw'
+                sh './mvnw -v'
                 sh './mvnw clean test'
             }
         }
