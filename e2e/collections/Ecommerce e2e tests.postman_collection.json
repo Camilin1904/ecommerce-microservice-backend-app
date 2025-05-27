@@ -88,7 +88,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"credentialId\": 5,\n    \"username\": \"johndoe\",\n    \"password\": \"$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy\",\n    \"roleBasedAuthority\": \"ROLE_USER\",\n    \"isEnabled\": true,\n    \"isAccountNonExpired\": true,\n    \"isAccountNonLocked\": true,\n    \"isCredentialsNonExpired\": true,\n    \"user\" :{\n        \"userId\": \"{{userId}}\"\n    }\n}",
+							"raw": "{\n    \"credentialId\": \"{{credentialId}}\",\n    \"username\": \"johndoe\",\n    \"password\": \"$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy\",\n    \"roleBasedAuthority\": \"ROLE_USER\",\n    \"isEnabled\": true,\n    \"isAccountNonExpired\": true,\n    \"isAccountNonLocked\": true,\n    \"isCredentialsNonExpired\": true,\n    \"user\" :{\n        \"userId\": \"{{userId}}\"\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -342,7 +342,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"credentialId\": 5,\n    \"username\": \"johndoe\",\n    \"password\": \"$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy\",\n    \"roleBasedAuthority\": \"ROLE_USER\",\n    \"isEnabled\": true,\n    \"isAccountNonExpired\": true,\n    \"isAccountNonLocked\": true,\n    \"isCredentialsNonExpired\": true,\n    \"user\" :{\n        \"userId\": \"{{userId}}\"\n    }\n}",
+							"raw": "{\n    \"credentialId\": \"{{credentialId}}\",\n    \"username\": \"johndoe\",\n    \"password\": \"$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy\",\n    \"roleBasedAuthority\": \"ROLE_USER\",\n    \"isEnabled\": true,\n    \"isAccountNonExpired\": true,\n    \"isAccountNonLocked\": true,\n    \"isCredentialsNonExpired\": true,\n    \"user\" :{\n        \"userId\": \"{{userId}}\"\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -645,13 +645,13 @@
 					"response": []
 				},
 				{
-					"name": "Update the credential Copy 2",
+					"name": "Update the credential Copy",
 					"request": {
 						"method": "PUT",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"credentialId\": 5,\n    \"username\": \"johndoe\",\n    \"password\": \"$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy\",\n    \"roleBasedAuthority\": \"ROLE_USER\",\n    \"isEnabled\": true,\n    \"isAccountNonExpired\": true,\n    \"isAccountNonLocked\": true,\n    \"isCredentialsNonExpired\": true,\n    \"user\" :{\n        \"userId\": \"{{userId}}\"\n    }\n}",
+							"raw": "{\n    \"credentialId\": \"{{credentialId}}\",\n    \"username\": \"johndoe\",\n    \"password\": \"$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy\",\n    \"roleBasedAuthority\": \"ROLE_USER\",\n    \"isEnabled\": true,\n    \"isAccountNonExpired\": true,\n    \"isAccountNonLocked\": true,\n    \"isCredentialsNonExpired\": true,\n    \"user\" :{\n        \"userId\": \"{{userId}}\"\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -926,17 +926,15 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8080/order-service/api/orders/5",
-							"protocol": "http",
+							"raw": "{{baseURL}}/order-service/api/orders/{{orderId}}",
 							"host": [
-								"localhost"
+								"{{baseURL}}"
 							],
-							"port": "8080",
 							"path": [
 								"order-service",
 								"api",
 								"orders",
-								"5"
+								"{{orderId}}"
 							]
 						}
 					},
@@ -1082,13 +1080,13 @@
 					"response": []
 				},
 				{
-					"name": "Update the credential Copy 3",
+					"name": "Update the credential Copy",
 					"request": {
 						"method": "PUT",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"credentialId\": 5,\n    \"username\": \"johndoe\",\n    \"password\": \"$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy\",\n    \"roleBasedAuthority\": \"ROLE_USER\",\n    \"isEnabled\": true,\n    \"isAccountNonExpired\": true,\n    \"isAccountNonLocked\": true,\n    \"isCredentialsNonExpired\": true,\n    \"user\" :{\n        \"userId\": \"{{userId}}\"\n    }\n}",
+							"raw": "{\n    \"credentialId\": \"{{credentialId}}\",\n    \"username\": \"johndoe\",\n    \"password\": \"$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy\",\n    \"roleBasedAuthority\": \"ROLE_USER\",\n    \"isEnabled\": true,\n    \"isAccountNonExpired\": true,\n    \"isAccountNonLocked\": true,\n    \"isCredentialsNonExpired\": true,\n    \"user\" :{\n        \"userId\": \"{{userId}}\"\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1363,17 +1361,15 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8080/order-service/api/orders/5",
-							"protocol": "http",
+							"raw": "{{baseURL}}/order-service/api/orders/{{orderId}}",
 							"host": [
-								"localhost"
+								"{{baseURL}}"
 							],
-							"port": "8080",
 							"path": [
 								"order-service",
 								"api",
 								"orders",
-								"5"
+								"{{orderId}}"
 							]
 						}
 					},
@@ -1497,6 +1493,11 @@
 		},
 		{
 			"key": "paymentId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "credentialId",
 			"value": "",
 			"type": "string"
 		}

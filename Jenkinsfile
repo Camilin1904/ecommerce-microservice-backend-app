@@ -5,6 +5,7 @@ pipeline {
         DOCKER_REGISTRY = 'your-docker-registry'
         PROJECT_VERSION = '0.1.0'
         COMPOSE_FILE = 'compose.yml'
+        API_GATEWAY_PORT = '8080'
     }
     
     stages {
@@ -14,126 +15,129 @@ pipeline {
             }
         }
         
-        stage('Build Services') {
+        stage('Clean and Test') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                echo 'Cleaning and running tests...'
+                sh 'chmod +x ./mvnw'
+                sh './mvnw clean test'
             }
         }
         
-        stage('Build Docker Images') {
+        stage('Deploy Services') {
             steps {
                 script {
-                    // Build all service images
-                    sh 'docker-compose -f ${COMPOSE_FILE} build'
+                    echo 'Deploying services using Kubernetes...'
+                    sh 'chmod +x ./k8s/deploy-services.sh'
+                    sh './k8s/deploy-services.sh'
+                    
+                    // Wait for services to be ready
+                    echo 'Waiting for services to be ready...'
+                    sleep 180 // 3 minutes
+                    
+                    // Check if pods are running
+                    sh 'kubectl get pods'
                 }
             }
         }
         
-        stage('Deploy Zipkin') {
+        stage('Port Forward API Gateway') {
             steps {
                 script {
-                    echo 'Deploying Zipkin...'
-                    sh 'docker-compose -f ${COMPOSE_FILE} up -d zipkin-container'
+                    echo 'Setting up port forwarding for API Gateway on port 8080...'
+                    // Kill any existing port-forward processes on port 8080
+                    sh '''
+                        pkill -f "kubectl port-forward.*8080" || true
+                        sleep 5
+                    '''
                     
-                    // Wait for Zipkin to be healthy
+                    // Start port forwarding in background
+                    sh '''
+                        nohup kubectl port-forward service/api-gateway 8080:8080 > port-forward.log 2>&1 &
+                        echo $! > port-forward.pid
+                        sleep 10
+                    '''
+                    
+                    // Verify port forwarding is working
                     timeout(time: 2, unit: 'MINUTES') {
                         sh '''
-                            until $(curl --output /dev/null --silent --head --fail http://localhost:9411/health); do
-                                printf '.'
-                                sleep 5
-                            done
-                        '''
-                    }
-                    echo 'Zipkin is up and running!'
-                }
-            }
-        }
-        
-        stage('Deploy Service Discovery') {
-            steps {
-                script {
-                    echo 'Deploying Service Discovery...'
-                    sh 'docker-compose -f ${COMPOSE_FILE} up -d service-discovery'
-                    
-                    // Wait for Service Discovery to be healthy
-                    timeout(time: 3, unit: 'MINUTES') {
-                        sh '''
-                            until $(curl --output /dev/null --silent --head --fail http://localhost:8761/actuator/health); do
-                                printf '.'
+                            until $(curl --output /dev/null --silent --head --fail http://localhost:8080/actuator/health); do
+                                printf 'Waiting for API Gateway to be available on port 8080...'
                                 sleep 10
                             done
                         '''
                     }
-                    echo 'Service Discovery is up and running!'
+                    echo 'API Gateway is now accessible on port 8080!'
                 }
             }
         }
         
-        stage('Deploy Other Services') {
-            steps {
-                script {
-                    echo 'Deploying API Gateway...'
-                    sh 'docker-compose -f ${COMPOSE_FILE} up -d api-gateway-container'
-                    
-                    echo 'Deploying Proxy Client...'
-                    sh 'docker-compose -f ${COMPOSE_FILE} up -d proxy-client-container'
-                    
-                    echo 'Deploying Order Service...'
-                    sh 'docker-compose -f ${COMPOSE_FILE} up -d order-service-container'
-                    
-                    echo 'Deploying Payment Service...'
-                    sh 'docker-compose -f ${COMPOSE_FILE} up -d payment-service-container'
-                    
-                    echo 'Deploying Product Service...'
-                    sh 'docker-compose -f ${COMPOSE_FILE} up -d product-service-container'
-                    
-                    echo 'Deploying Shipping Service...'
-                    sh 'docker-compose -f ${COMPOSE_FILE} up -d shipping-service-container'
-                    
-                    echo 'Deploying User Service...'
-                    sh 'docker-compose -f ${COMPOSE_FILE} up -d user-service-container'
-                    
-                    echo 'Deploying Favourite Service...'
-                    sh 'docker-compose -f ${COMPOSE_FILE} up -d favourite-service-container'
-                }
-            }
-        }
         
-        stage('Verify All Services') {
+        stage('Run E2E Tests') {
             steps {
                 script {
-                    echo 'Verifying all services...'
-                    sh 'docker-compose -f ${COMPOSE_FILE} ps'
-                    
-                    // Check health endpoints for all services
-                    timeout(time: 5, unit: 'MINUTES') {
-                        sh '''
-                            # Check service endpoints
-                            curl -s http://localhost:8081/actuator/health
-                            curl -s http://localhost:8900/actuator/health
-                            curl -s http://localhost:8300/actuator/health
-                            curl -s http://localhost:8400/actuator/health
-                            curl -s http://localhost:8500/actuator/health
-                            curl -s http://localhost:8600/actuator/health
-                            curl -s http://localhost:8700/actuator/health
-                            curl -s http://localhost:8800/actuator/health
-                            echo "All services verified!"
-                        '''
+                    echo 'Installing E2E test dependencies...'
+                    dir('e2e') {
+                        sh 'npm install'
+                        
+                        echo 'Running E2E tests...'
+                        sh 'npm run test:html-report'
                     }
+                }
+            }
+        }
+        
+        stage('Verify Deployment') {
+            steps {
+                script {
+                    echo 'Verifying all services are running...'
+                    sh 'kubectl get pods -o wide'
+                    sh 'kubectl get services'
+                    
+                    // Verify API Gateway is accessible
+                    sh 'curl -s http://localhost:8080/actuator/health'
+                    
+                    echo 'Deployment verification completed successfully!'
                 }
             }
         }
     }
     
     post {
+        always {
+            // Archive E2E test reports
+            archiveArtifacts artifacts: 'e2e/reports/**', allowEmptyArchive: true
+            
+            // Cleanup port forwarding
+            script {
+                sh '''
+                    if [ -f port-forward.pid ]; then
+                        kill $(cat port-forward.pid) || true
+                        rm port-forward.pid
+                    fi
+                    pkill -f "kubectl port-forward.*8080" || true
+                '''
+            }
+        }
         success {
-            echo 'Deployment successful!'
+            echo 'Deployment and E2E tests completed successfully!'
             // You can add notifications here (email, Slack, etc.)
         }
         failure {
-            echo 'Deployment failed!'
-            // Cleanup on failure
-            sh 'docker-compose -f ${COMPOSE_FILE} down'
+            echo 'Pipeline failed!'
+            script {
+                // Cleanup on failure
+                sh '''
+                    # Stop port forwarding
+                    if [ -f port-forward.pid ]; then
+                        kill $(cat port-forward.pid) || true
+                        rm port-forward.pid
+                    fi
+                    pkill -f "kubectl port-forward.*8080" || true
+                    
+                    # Optional: Cleanup Kubernetes deployments on failure
+                    # kubectl delete -f k8s/ || true
+                '''
+            }
             // You can add notifications here (email, Slack, etc.)
         }
     }
