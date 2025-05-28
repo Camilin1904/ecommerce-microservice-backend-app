@@ -1,0 +1,36 @@
+pipeline {
+    agent any
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Clean and Test with Java 11') {
+            steps {
+                script {
+                    echo 'Running tests in Java 11 Docker container...'
+                    sh '''
+                        # Run tests using a Java 11 Docker container
+                        docker run --rm \
+                            -v "$(pwd)":/workspace \
+                            -w /workspace \
+                            openjdk:11-jdk-slim \
+                            bash -c "
+                                echo 'Java version in container:'
+                                java -version
+                                
+                                echo 'Making mvnw executable...'
+                                chmod +x ./mvnw
+                                
+                                echo 'Running Maven tests...'
+                                ./mvnw clean test
+                            "
+                    '''
+                }
+            }
+        }
+    }
+}
