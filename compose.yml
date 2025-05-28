@@ -7,6 +7,7 @@ services:
     networks:
       - ecommerce-net
   service-discovery:
+    image: camilin19/service-discovery:latest
     build:
       context: ./service-discovery
     ports:
@@ -25,6 +26,7 @@ services:
   #     - SPRING_PROFILES_ACTIVE=dev  
   #     - SPRING_ZIPKIN_BASE_URL=http://zipkin:9411/
   api-gateway:
+    image: camilin19/api-gateway:latest
     build:
       context: ./api-gateway
     ports:
@@ -37,6 +39,7 @@ services:
     networks:
       - ecommerce-net
   proxy-client:
+    image: camilin19/proxy-client:latest
     build:
       context: ./proxy-client
     ports:
@@ -50,6 +53,7 @@ services:
     networks:
       - ecommerce-net
   order-service:
+    image: camilin19/order-service:latest
     build:
       context: ./order-service
     ports:
@@ -63,6 +67,7 @@ services:
     networks:
       - ecommerce-net
   payment-service:
+    image: camilin19/payment-service:latest
     build:
       context: ./payment-service
     ports:
@@ -76,6 +81,7 @@ services:
     networks:
       - ecommerce-net
   product-service:
+    image: camilin19/product-service:latest
     build:
       context: ./product-service
     ports:
@@ -89,6 +95,7 @@ services:
     networks:
       - ecommerce-net
   shipping-service:
+    image: camilin19/shipping-service:latest
     build:
       context: ./shipping-service
     ports:
@@ -102,6 +109,7 @@ services:
     networks:
       - ecommerce-net
   user-service:
+    image: camilin19/user-service:latest
     build:
       context: ./user-service
     ports:
@@ -115,6 +123,7 @@ services:
     networks:
       - ecommerce-net
   favourite-service:
+    image: camilin19/favourite-service:latest
     build:
       context: ./favourite-service
     ports:

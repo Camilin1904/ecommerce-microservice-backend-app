@@ -159,7 +159,7 @@ else
     # Mostrar comandos para acceder a Jenkins
     echo -e "\n${YELLOW}Para acceder a Jenkins, ejecuta:${NC}"
     if [[ "$NAMESPACE" == "default" ]]; then
-        echo -e "${WHITE}minikube service jenkins${NC}"
+        echo -e "${WHITE}minikube service jenkins${NC} --url"
     else
         echo -e "${WHITE}minikube service jenkins -n $NAMESPACE${NC}"
     fi

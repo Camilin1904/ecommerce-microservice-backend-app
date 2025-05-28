@@ -14,20 +14,13 @@ pipeline {
                     echo 'Running tests in Java 11 Docker container...'
                     sh '''
                         # Run tests using a Java 11 Docker container
-                        docker run --rm \
-                            -v "$(pwd)":/workspace \
-                            -w /workspace \
-                            openjdk:11-jdk-slim \
-                            bash -c "
-                                echo 'Java version in container:'
-                                java -version
-                                
-                                echo 'Making mvnw executable...'
-                                chmod +x ./mvnw
-                                
-                                echo 'Running Maven tests...'
-                                ./mvnw clean test
-                            "
+                        
+                        echo 'Making mvnw executable...'
+                        chmod +x ./mvnw
+                        
+                        echo 'Running Maven tests...'
+                        ./mvnw clean test
+                            
                     '''
                 }
             }
