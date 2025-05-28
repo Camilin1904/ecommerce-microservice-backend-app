@@ -19,7 +19,7 @@ pipeline {
                         chmod +x ./mvnw
                         
                         echo 'Running Maven tests...'
-                        ./mvnw clean test
+                        ./mvnw clean package
                             
                     '''
                 }
