@@ -9,10 +9,6 @@ pipeline {
         KUBECONFIG = '/home/jenkins/.kube/config'
     }
     
-    tools {
-        maven 'Maven'
-        nodejs 'NodeJS'
-    }
     
     stages {
         stage('Checkout') {
@@ -75,28 +71,13 @@ pipeline {
         stage('Maven Tests') {
             steps {
                 script {
-                    echo 'Running Maven tests for all services...'
+                    echo 'Running Maven tests using root mvnw script...'
                     
-                    // Run tests for each service
-                    def services = [
-                        'api-gateway',
-                        'cloud-config',
-                        'favourite-service',
-                        'order-service',
-                        'payment-service',
-                        'product-service',
-                        'proxy-client',
-                        'service-discovery',
-                        'shipping-service',
-                        'user-service'
-                    ]
+                    // Make mvnw executable
+                    sh 'chmod +x ./mvnw'
                     
-                    services.each { service ->
-                        echo "Testing ${service}..."
-                        dir(service) {
-                            sh 'mvn clean test'
-                        }
-                    }
+                    // Run tests using root mvnw
+                    sh './mvnw clean test'
                     
                     echo 'All Maven tests completed successfully!'
                 }
@@ -115,8 +96,14 @@ pipeline {
         stage('Build Services') {
             steps {
                 script {
-                    echo 'Building all services...'
-                    sh 'mvn clean package -DskipTests'
+                    echo 'Building all services using root mvnw script...'
+                    
+                    // Make mvnw executable
+                    sh 'chmod +x ./mvnw'
+                    
+                    // Build all services
+                    sh './mvnw clean package -DskipTests'
+                    
                     echo 'All services built successfully!'
                 }
             }
