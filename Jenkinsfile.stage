@@ -60,14 +60,45 @@ pipeline {
                 # Verificar Maven
                 mvn --version
                 
+                # Instalar Python 3 si no está disponible
+                echo "Verificando Python 3..."
+                if ! command -v python3 &> /dev/null; then
+                    echo "Instalando Python 3..."
+                    cd /tmp
+                    curl -L -o Python-3.9.18.tgz https://www.python.org/ftp/python/3.9.18/Python-3.9.18.tgz
+                    tar -xzf Python-3.9.18.tgz
+                    cd Python-3.9.18
+                    
+                    # Configurar y compilar Python
+                    ./configure --prefix=$HOME/python3 --enable-optimizations
+                    make -j$(nproc)
+                    make install
+                    
+                    # Configurar PATH
+                    export PATH=$HOME/python3/bin:$PATH
+                    echo 'export PATH=$HOME/python3/bin:$PATH' >> ~/.bashrc
+                    
+                    cd /tmp
+                    rm -rf Python-3.9.18 Python-3.9.18.tgz
+                    cd -
+                else
+                    echo "Python 3 ya está instalado"
+                fi
+                
+                # Verificar Python y pip
+                python3 --version
+                python3 -m pip --version || {
+                    echo "Instalando pip..."
+                    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+                    python3 get-pip.py --user
+                    rm get-pip.py
+                }
+                
                 # Instalar xz-utils si no está disponible, o usar alternativa .tar.gz
                 echo "Verificando xz para descomprimir Node.js..."
                 if ! command -v xz &> /dev/null; then
-                    echo "xz no disponible, instalando..."
-                    apt-get update && apt-get install -y xz-utils || {
-                        echo "No se pudo instalar xz-utils, usando alternativa .tar.gz"
-                        USE_TAR_GZ=true
-                    }
+                    echo "xz no disponible, usando alternativa .tar.gz directamente"
+                    USE_TAR_GZ=true
                 fi
                 
                 # Descargar e instalar Node.js binario
@@ -106,15 +137,18 @@ pipeline {
                 
                 # Instalar Python packages usando --user (sin permisos de root)
                 echo "Instalando locust..."
+                export PATH=$HOME/python3/bin:$PATH
                 python3 -m pip install --user locust --break-system-packages || pip3 install --user locust --break-system-packages
                 
                 # Verificar instalaciones finales
                 echo "=== RESUMEN DE HERRAMIENTAS INSTALADAS ==="
+                export PATH=$HOME/python3/bin:$PATH
                 kubectl version --client
                 mvn --version
                 node --version
                 npm --version
                 newman --version
+                python3 --version
                 python3 -m locust --version || echo "Locust pendiente de verificar en PATH"
                 echo "============================================"
                 '''
@@ -338,7 +372,7 @@ pipeline {
                         // Ejecutar tests de Locust
                         sh '''
                         # Configurar PATH
-                        export PATH=$HOME/bin:$HOME/maven/bin:$HOME/nodejs/bin:$HOME/.local/bin:$PATH
+                        export PATH=$HOME/bin:$HOME/maven/bin:$HOME/nodejs/bin:$HOME/python3/bin:$HOME/.local/bin:$PATH
                         
                         echo "Esperando a que el port-forward esté listo..."
                         sleep 15
