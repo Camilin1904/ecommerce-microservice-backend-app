@@ -60,15 +60,35 @@ pipeline {
                 # Verificar Maven
                 mvn --version
                 
-                # Descargar e instalar Node.js binario (sin apt-get)
+                # Instalar xz-utils si no está disponible, o usar alternativa .tar.gz
+                echo "Verificando xz para descomprimir Node.js..."
+                if ! command -v xz &> /dev/null; then
+                    echo "xz no disponible, instalando..."
+                    apt-get update && apt-get install -y xz-utils || {
+                        echo "No se pudo instalar xz-utils, usando alternativa .tar.gz"
+                        USE_TAR_GZ=true
+                    }
+                fi
+                
+                # Descargar e instalar Node.js binario
                 echo "Instalando Node.js binario..."
                 if ! command -v node &> /dev/null; then
                     # Limpiar directorio si existe
                     rm -rf $HOME/nodejs
                     cd /tmp
-                    curl -L -o node-v18.19.0-linux-x64.tar.xz https://nodejs.org/dist/v18.19.0/node-v18.19.0-linux-x64.tar.xz
-                    ls
-                    tar -xf node-v18.19.0-linux-x64.tar.xz
+                    
+                    if [ "$USE_TAR_GZ" = "true" ]; then
+                        echo "Descargando Node.js en formato .tar.gz..."
+                        curl -L -o node-v18.19.0-linux-x64.tar.gz https://nodejs.org/dist/v18.19.0/node-v18.19.0-linux-x64.tar.gz
+                        echo "Descomprimiendo Node.js (.tar.gz)..."
+                        tar -xzf node-v18.19.0-linux-x64.tar.gz
+                    else
+                        echo "Descargando Node.js en formato .tar.xz..."
+                        curl -L -o node-v18.19.0-linux-x64.tar.xz https://nodejs.org/dist/v18.19.0/node-v18.19.0-linux-x64.tar.xz
+                        echo "Descomprimiendo Node.js (.tar.xz)..."
+                        tar -xf node-v18.19.0-linux-x64.tar.xz
+                    fi
+                    
                     mv node-v18.19.0-linux-x64 $HOME/nodejs
                     export PATH=$HOME/nodejs/bin:$PATH
                     echo 'export PATH=$HOME/nodejs/bin:$PATH' >> ~/.bashrc
