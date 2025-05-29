@@ -20,35 +20,11 @@ pipeline {
         
         stage('Install Dependencies') {
             parallel {
-                stage('Install Kubectl') {
-                    steps {
-                        script {
-                            sh '''
-                                # Check if kubectl is already installed
-                                if ! command -v kubectl &> /dev/null; then
-                                    echo "Installing kubectl..."
-                                    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-                                    chmod +x kubectl
-                                    sudo mv kubectl /usr/local/bin/
-                                else
-                                    echo "kubectl is already installed"
-                                fi
-                                kubectl version --client
-                            '''
-                        }
-                    }
-                }
                 
                 stage('Install Python Dependencies') {
                     steps {
                         script {
                             sh '''
-                                # Install Python and pip if not available
-                                if ! command -v python3 &> /dev/null; then
-                                    sudo apt-get update
-                                    sudo apt-get install -y python3 python3-pip
-                                fi
-                                
                                 # Install locust
                                 pip3 install locust --user
                             '''
@@ -105,46 +81,6 @@ pipeline {
                     sh './mvnw clean package -DskipTests'
                     
                     echo 'All services built successfully!'
-                }
-            }
-        }
-        
-        stage('Verify Minikube') {
-            steps {
-                script {
-                    echo 'Verifying minikube status...'
-                    sh '''
-                        # Check if minikube is running
-                        minikube status || {
-                            echo "Minikube is not running, starting it..."
-                            minikube start --driver=docker
-                        }
-                        
-                        # Set kubectl context to minikube
-                        kubectl config use-context minikube
-                        
-                        # Verify connection
-                        kubectl cluster-info
-                        kubectl get nodes
-                    '''
-                }
-            }
-        }
-        
-        stage('Build and Load Docker Images to Minikube') {
-            steps {
-                script {
-                    echo 'Building Docker images and loading them to minikube...'
-                    sh '''
-                        # Point Docker client to minikube's Docker daemon
-                        eval $(minikube docker-env)
-                        
-                        # Build all service images
-                        docker-compose -f compose.yml build
-                        
-                        # Verify images are available in minikube
-                        docker images | grep ecommerce
-                    '''
                 }
             }
         }
