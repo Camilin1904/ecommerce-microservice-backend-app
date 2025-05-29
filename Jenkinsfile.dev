@@ -12,8 +12,6 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        apt-get install -y openjdk-11-jdk maven
-                        export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
                         chmod +x ./mvnw
                         
                         ./mvnw clean package -DskipTests

@@ -1,0 +1,248 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_REGISTRY = 'localhost:5000'
+        KUBECONFIG = '/var/lib/jenkins/.kube/config'
+        MINIKUBE_HOME = '/var/lib/jenkins'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Unit Tests') {
+            parallel {
+                stage('Test Microservice 1') {
+                    steps {
+                        script {
+                            docker.image('node:18-alpine').inside('-v /var/run/docker.sock:/var/run/docker.sock') {
+                                sh '''
+                                    cd microservice1
+                                    npm install
+                                    npm test
+                                '''
+                            }
+                        }
+                    }
+                }
+                stage('Test Microservice 2') {
+                    steps {
+                        script {
+                            docker.image('node:18-alpine').inside('-v /var/run/docker.sock:/var/run/docker.sock') {
+                                sh '''
+                                    cd microservice2
+                                    npm install
+                                    npm test
+                                '''
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('Build Docker Images') {
+            steps {
+                script {
+                    def services = ['auth-service', 'product-service', 'order-service', 'payment-service']
+                    services.each { service ->
+                        sh """
+                            docker build -t ${DOCKER_REGISTRY}/${service}:${BUILD_NUMBER} ./${service}
+                            docker push ${DOCKER_REGISTRY}/${service}:${BUILD_NUMBER}
+                        """
+                    }
+                }
+            }
+        }
+        
+        stage('Start Minikube') {
+            steps {
+                script {
+                    docker.image('bitnami/kubectl:latest').inside("--network host -v ${MINIKUBE_HOME}/.minikube:${MINIKUBE_HOME}/.minikube -v ${KUBECONFIG}:${KUBECONFIG}") {
+                        sh '''
+                            # Check if minikube is running, start if not
+                            if ! minikube status | grep -q "Running"; then
+                                minikube start --driver=docker
+                            fi
+                            
+                            # Configure kubectl to use minikube
+                            minikube update-context
+                            
+                            # Enable required addons
+                            minikube addons enable ingress
+                            minikube addons enable metrics-server
+                        '''
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy to Minikube') {
+            steps {
+                script {
+                    docker.image('bitnami/kubectl:latest').inside("--network host -v ${WORKSPACE}:/workspace -v ${KUBECONFIG}:${KUBECONFIG}") {
+                        sh '''
+                            cd /workspace
+                            
+                            # Apply namespace
+                            kubectl apply -f k8s/namespace.yaml
+                            
+                            # Apply configmaps and secrets
+                            kubectl apply -f k8s/configmap.yaml -n ecommerce
+                            kubectl apply -f k8s/secrets.yaml -n ecommerce
+                            
+                            # Deploy database
+                            kubectl apply -f k8s/database/ -n ecommerce
+                            
+                            # Wait for database to be ready
+                            kubectl wait --for=condition=ready pod -l app=postgres -n ecommerce --timeout=300s
+                            
+                            # Deploy microservices
+                            sed -i "s/latest/${BUILD_NUMBER}/g" k8s/deployments/*.yaml
+                            kubectl apply -f k8s/deployments/ -n ecommerce
+                            kubectl apply -f k8s/services/ -n ecommerce
+                            
+                            # Wait for all deployments to be ready
+                            kubectl wait --for=condition=available deployment --all -n ecommerce --timeout=600s
+                            
+                            # Verify pods are running
+                            kubectl get pods -n ecommerce
+                        '''
+                    }
+                }
+            }
+        }
+        
+        stage('E2E Tests') {
+            steps {
+                script {
+                    docker.image('cypress/included:latest').inside("--network host -v ${WORKSPACE}:/e2e -w /e2e") {
+                        sh '''
+                            # Get minikube IP for testing
+                            MINIKUBE_IP=$(minikube ip)
+                            export CYPRESS_baseUrl=http://${MINIKUBE_IP}
+                            
+                            # Install dependencies if needed
+                            if [ -f "e2e/package.json" ]; then
+                                cd e2e
+                                npm install
+                            fi
+                            
+                            # Run Cypress E2E tests
+                            cypress run --config baseUrl=http://${MINIKUBE_IP} --spec "cypress/e2e/**/*.cy.js"
+                        '''
+                    }
+                }
+            }
+            post {
+                always {
+                    publishHTML([
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'e2e/cypress/reports',
+                        reportFiles: 'index.html',
+                        reportName: 'E2E Test Report'
+                    ])
+                }
+            }
+        }
+        
+        stage('Performance Tests (Locust)') {
+            steps {
+                script {
+                    docker.image('locustio/locust:latest').inside("--network host -v ${WORKSPACE}/locust:/mnt/locust -w /mnt/locust") {
+                        sh '''
+                            # Get minikube IP for load testing
+                            MINIKUBE_IP=$(minikube ip)
+                            
+                            # Run Locust performance tests
+                            locust -f locustfile.py \
+                                --host=http://${MINIKUBE_IP} \
+                                --users=50 \
+                                --spawn-rate=5 \
+                                --run-time=5m \
+                                --headless \
+                                --html=report.html \
+                                --csv=results
+                        '''
+                    }
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'locust/report.html, locust/results*.csv', allowEmptyArchive: true
+                    publishHTML([
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'locust',
+                        reportFiles: 'report.html',
+                        reportName: 'Locust Performance Report'
+                    ])
+                }
+            }
+        }
+        
+        stage('Health Check') {
+            steps {
+                script {
+                    docker.image('curlimages/curl:latest').inside("--network host") {
+                        sh '''
+                            MINIKUBE_IP=$(minikube ip)
+                            
+                            # Check health endpoints
+                            curl -f http://${MINIKUBE_IP}/auth/health || exit 1
+                            curl -f http://${MINIKUBE_IP}/products/health || exit 1
+                            curl -f http://${MINIKUBE_IP}/orders/health || exit 1
+                            curl -f http://${MINIKUBE_IP}/payments/health || exit 1
+                            
+                            echo "All services are healthy!"
+                        '''
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            script {
+                // Cleanup - collect logs before destroying
+                docker.image('bitnami/kubectl:latest').inside("--network host -v ${KUBECONFIG}:${KUBECONFIG}") {
+                    sh '''
+                        echo "Collecting logs from all pods..."
+                        kubectl logs --all-containers=true -n ecommerce --tail=100 > minikube-logs.txt || true
+                    '''
+                }
+                
+                archiveArtifacts artifacts: 'minikube-logs.txt', allowEmptyArchive: true
+            }
+            
+            // Clean up workspace
+            cleanWs()
+        }
+        
+        failure {
+            script {
+                docker.image('bitnami/kubectl:latest').inside("--network host -v ${KUBECONFIG}:${KUBECONFIG}") {
+                    sh '''
+                        echo "Pipeline failed, collecting debug information..."
+                        kubectl describe pods -n ecommerce > debug-info.txt || true
+                        kubectl get events -n ecommerce --sort-by='.lastTimestamp' >> debug-info.txt || true
+                    '''
+                }
+                
+                archiveArtifacts artifacts: 'debug-info.txt', allowEmptyArchive: true
+            }
+        }
+        
+        success {
+            echo 'Pipeline completed successfully! All tests passed and services are deployed.'
+        }
+    }
+}
