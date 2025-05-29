@@ -60,6 +60,46 @@ pipeline {
                 # Verificar Maven
                 mvn --version
                 
+                # Instalar GCC y herramientas de compilación si no están disponibles
+                echo "Verificando GCC y herramientas de compilación..."
+                if ! command -v gcc &> /dev/null; then
+                    echo "Instalando GCC desde fuentes..."
+                    cd /tmp
+                    
+                    # Descargar e instalar GCC 9.5.0 (versión estable)
+                    curl -L -o gcc-9.5.0.tar.gz https://gcc.gnu.org/releases/gcc-9.5.0/gcc-9.5.0.tar.gz
+                    tar -xzf gcc-9.5.0.tar.gz
+                    cd gcc-9.5.0
+                    
+                    # Descargar prerequisitos
+                    ./contrib/download_prerequisites
+                    
+                    # Crear directorio de build separado
+                    mkdir -p build
+                    cd build
+                    
+                    # Configurar con instalación en directorio personal
+                    ../configure --prefix=$HOME/gcc --enable-languages=c,c++ --disable-multilib
+                    
+                    # Compilar (esto puede tomar tiempo)
+                    make -j$(nproc)
+                    make install
+                    
+                    # Configurar PATH
+                    export PATH=$HOME/gcc/bin:$PATH
+                    echo 'export PATH=$HOME/gcc/bin:$PATH' >> ~/.bashrc
+                    
+                    # Limpiar archivos temporales
+                    cd /tmp
+                    rm -rf gcc-9.5.0 gcc-9.5.0.tar.gz
+                    cd -
+                else
+                    echo "GCC ya está instalado"
+                fi
+                
+                # Verificar GCC
+                gcc --version || echo "GCC no disponible, continuando..."
+                
                 # Instalar Python 3 si no está disponible
                 echo "Verificando Python 3..."
                 if ! command -v python3 &> /dev/null; then
@@ -159,23 +199,18 @@ pipeline {
 
             steps {
                 sh '''
-                # Configurar JAVA_HOME para Java 11
+                # Configurar PATH completo con todas las herramientas instaladas
+                export PATH=$HOME/bin:$HOME/maven/bin:$HOME/nodejs/bin:$HOME/python3/bin:$HOME/gcc/bin:$HOME/.local/bin:$PATH
                 export JAVA_HOME=$HOME/java11
-                export PATH=$HOME/java11/bin:$HOME/bin:$HOME/maven/bin:$HOME/nodejs/bin:$PATH
+                export PATH=$HOME/java11/bin:$PATH
 
                 echo "Verificando versión de Java para Maven:"
                 java -version
                 
-                echo "Ejecutando pruebas unitarias en el servicio de productos"
-                cd product-service
-
-                # Limpiar target anterior
-                rm -rf target/
-
-                # Usar Maven con Java 11
-                mvn clean test -Dmaven.compiler.source=11 -Dmaven.compiler.target=11 -Dmaven.test.failure.ignore=true
-
-                cd ..
+                echo "Ejecutando pruebas unitarias con Maven en la raíz del proyecto"
+                
+                # Usar Maven wrapper desde la raíz del proyecto
+                ./mvnw clean test -Dmaven.compiler.source=11 -Dmaven.compiler.target=11 -Dmaven.test.failure.ignore=true
                 '''
             }
             post {
@@ -188,15 +223,15 @@ pipeline {
         stage('Ejecutar Pruebas de Integración') {
             steps {
                 sh '''
-                # Configurar PATH
-                export PATH=$HOME/bin:$HOME/maven/bin:$HOME/nodejs/bin:$PATH
+                # Configurar PATH completo con todas las herramientas instaladas
+                export PATH=$HOME/bin:$HOME/maven/bin:$HOME/nodejs/bin:$HOME/python3/bin:$HOME/gcc/bin:$HOME/.local/bin:$PATH
+                export JAVA_HOME=$HOME/java11
+                export PATH=$HOME/java11/bin:$PATH
         
                 echo "Ejecutando pruebas de integración en los microservicios"
         
-                # Ejecutar pruebas de integración en product-service
-                cd product-service
-                mvn test -Dtest=*Integration* -Dmaven.compiler.source=11 -Dmaven.compiler.target=11 -Dmaven.test.failure.ignore=true
-                cd ..
+                # Ejecutar pruebas de integración usando Maven wrapper desde la raíz
+                ./mvnw test -Dtest=*Integration* -Dmaven.compiler.source=11 -Dmaven.compiler.target=11 -Dmaven.test.failure.ignore=true
                 '''
             }
             post {
