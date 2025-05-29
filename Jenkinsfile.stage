@@ -70,7 +70,7 @@ pipeline {
                     cd Python-3.9.18
                     
                     # Configurar y compilar Python
-                    ./configure --prefix=$HOME/python3 --enable-optimizations
+                    ./configure --prefix=$HOME/python3 
                     make -j$(nproc)
                     make install
                     
