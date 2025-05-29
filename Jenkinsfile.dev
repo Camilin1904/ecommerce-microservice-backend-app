@@ -15,7 +15,7 @@ pipeline {
 
                         chmod +x ./mvnw
                         
-                        ./mvnw clean package --DskipTests -Pjava11
+                        ./mvnw clean package -DskipTests -Pjava11
                             
                     '''
                 }
