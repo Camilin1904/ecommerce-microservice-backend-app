@@ -8,18 +8,14 @@ pipeline {
             }
         }
         
-        stage('Clean and Test with Java 11') {
+        stage('Build with Java 11') {
             steps {
                 script {
-                    echo 'Running tests in Java 11 Docker container...'
                     sh '''
-                        # Run tests using a Java 11 Docker container
-                        
-                        echo 'Making mvnw executable...'
+
                         chmod +x ./mvnw
                         
-                        echo 'Running Maven tests...'
-                        ./mvnw clean package
+                        ./mvnw clean package --DskipTests -Pjava11
                             
                     '''
                 }

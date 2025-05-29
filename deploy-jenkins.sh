@@ -151,15 +151,15 @@ fi
 if [[ "$OPEN_BROWSER" == true ]]; then
     echo -e "\n${YELLOW}Abriendo Jenkins en el navegador...${NC}"
     if [[ "$NAMESPACE" == "default" ]]; then
-        minikube service jenkins
+        minikube service jenkins --url
     else
-        minikube service jenkins -n "$NAMESPACE"
+        minikube service jenkins -n "$NAMESPACE" --url
     fi
 else
     # Mostrar comandos para acceder a Jenkins
     echo -e "\n${YELLOW}Para acceder a Jenkins, ejecuta:${NC}"
     if [[ "$NAMESPACE" == "default" ]]; then
-        echo -e "${WHITE}minikube service jenkins${NC} --url"
+        echo -e "${WHITE}minikube service jenkins${NC}"
     else
         echo -e "${WHITE}minikube service jenkins -n $NAMESPACE${NC}"
     fi
