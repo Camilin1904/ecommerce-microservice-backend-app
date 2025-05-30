@@ -116,9 +116,11 @@ pipeline {
                     sh '''
                         export PATH=$HOME/bin:$PATH
                         chmod +x k8s/deploy-services.sh
-                        chmod +x k8s/kubectl
 
                         k8s/deploy-services.sh
+                        
+                        echo "Waiting for services to be ready..."
+                        sleep 60
                     '''
                 }
             }
