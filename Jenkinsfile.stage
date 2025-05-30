@@ -154,6 +154,7 @@ pipeline {
             agent any
             steps {
                 script {
+                    sh 'export PATH=$HOME/bin:$PATH'
                     sh 'chmod +x k8s/deploy-services.sh'
                     sh 'chmod +x k8s/kubectl'
                     // Ensure your deploy script (k8s/deploy-services.sh) is configured
@@ -168,6 +169,8 @@ pipeline {
             steps {
                 dir('e2e') { // Change to the e2e directory
                     script {
+                        sh 'export PATH=$HOME/bin:$PATH'
+
                         sh 'npm install'
                         // Assumes 'npm test' in e2e/package.json runs your Newman tests.
                         // Example: "test": "newman run collections/mycollection.postman_collection.json -e environments/myenvironment.postman_environment.json"
@@ -182,6 +185,8 @@ pipeline {
             steps {
                 dir('locust') { // Change to the locust directory
                     script {
+                        sh 'export PATH=$HOME/bin:$PATH'
+
                         // Adjust the Locust command as needed.
                         // The --host should point to your application's entry point in Minikube.
                         // This might be an IP and NodePort, e.g., http://$(minikube ip):<service-nodeport>
