@@ -104,27 +104,26 @@ pipeline {
 /*
         stage('Build and Unit Test Java Services') {
             steps {
-                script {
-                    sh 'chmod +x mvnw'
-                    sh './mvnw clean package'
-                }
+ 
+                sh 'chmod +x mvnw'
+                sh './mvnw clean package'
+                
             }
         }
 
         stage('Deploy Services to Minikube') {
             steps {
-                script {
-                    sh '''
-                        export PATH=$HOME/bin:$PATH
-                        chmod +x k8s/deploy-services.sh
+                sh '''
+                    export PATH=$HOME/bin:$PATH
+                    chmod +x k8s/deploy-services.sh
 
-                        k8s/deploy-services.sh
-                        
-                        echo "Waiting for services to be ready..."
-                        sleep 60
-                    '''
-                }
+                    k8s/deploy-services.sh
+                    
+                    echo "Waiting for services to be ready..."
+                    sleep 60
+                '''
             }
+
         }*/
 
         stage('Run End-to-End (E2E) Tests') {
@@ -144,18 +143,15 @@ pipeline {
         stage('Run Locust Performance Tests') {
             steps {
 
-                script {
-
-                    sh 
-                    '''
-                        export PATH=$HOME/bin:$HOME/maven/bin:$HOME/nodejs/bin:$HOME/.local/bin:$PATH
-                        cd locust
-                        python3 -m locust -f locustfile.py --headless -u 500 -r 100 -t 30s --csv=load_test_report
-                    '''
-
-                }
+                sh 
+                '''
+                    export PATH=$HOME/bin:$HOME/maven/bin:$HOME/nodejs/bin:$HOME/.local/bin:$PATH
+                    cd locust
+                    python3 -m locust -f locustfile.py --headless -u 500 -r 100 -t 30s --csv=load_test_report
+                '''
 
             }
+
         }
     }
 
