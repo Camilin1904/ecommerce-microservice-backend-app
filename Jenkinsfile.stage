@@ -130,8 +130,8 @@ pipeline {
             steps {
 
                 sh '''
-                    export PATH=$HOME/bin:$PATH
                     cd e2e
+                    export PATH=$HOME/bin:$PATH
                     npm install
 
                     npm test
