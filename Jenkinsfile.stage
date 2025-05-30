@@ -149,7 +149,7 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        export PATH=$HOME/bin:$PATH'
+                        export PATH=$HOME/bin:$PATH
                         chmod +x k8s/deploy-services.sh
                         chmod +x k8s/kubectl
 
