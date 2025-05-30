@@ -9,20 +9,133 @@ pipeline {
 */
 
     
-    stages {
-        stage('Checkout Source Code') {
+          stages {
+        stage('Preparar Entorno') {
             steps {
-                script {
-                    // Assuming Git SCM is configured in the Jenkins job.
-                    // Otherwise, use: git url: 'your-git-repo-url', branch: 'your-branch'
-                    checkout scm
-                    sh 'echo "Current directory:" && pwd && ls -la'
+                sh '''
+                echo "Verificando entorno de despliegue para: ${SELECTED_ENV}"
+                
+                # Configurar PATH
+                export PATH=$HOME/bin:$PATH
+                
+                # Instalar kubectl
+                echo "Verificando kubectl"
+                if ! command -v kubectl &> /dev/null; then
+                    echo "Instalando kubectl"
+                    mkdir -p $HOME/bin
+                    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                    chmod +x kubectl && mv kubectl $HOME/bin/
+                    echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
+                fi
+                
+                # Instalar Java 11 para Maven (el proyecto requiere Java 11)
+                echo "Instalando Java 11 para Maven..."
+                if [ ! -d $HOME/java11 ]; then
+                    cd /tmp
+                    curl -L -o openjdk-11.tar.gz https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz
+                    tar -xzf openjdk-11.tar.gz
+                    mv jdk-11.0.2 $HOME/java11
+                    cd -
+                fi
 
-                    sh 'export PATH=$HOME/bin:$PATH'
-                }
+                # Configurar JAVA_HOME para Maven
+                export JAVA_HOME=$HOME/java11
+                export PATH=$HOME/java11/bin:$PATH
+                
+                echo "Verificando Java para Maven:"
+                java -version
+                javac -version
+                
+                # Instalar Maven si no está disponible
+                echo "Verificando Maven..."
+                if ! command -v mvn &> /dev/null; then
+                    echo "Instalando Maven..."
+                    # Limpiar directorio si existe
+                    rm -rf $HOME/maven
+                    cd /tmp
+                    curl -sL https://archive.apache.org/dist/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz -o apache-maven-3.8.6-bin.tar.gz
+                    tar -xzf apache-maven-3.8.6-bin.tar.gz
+                    mv apache-maven-3.8.6 $HOME/maven
+                    export PATH=$HOME/maven/bin:$PATH
+                    echo 'export PATH=$HOME/maven/bin:$PATH' >> ~/.bashrc
+                    cd -
+                fi
+                
+                # Verificar Maven
+                mvn --version
+                
+                # Descargar e instalar Node.js binario (sin apt-get)
+                echo "Instalando Node.js binario..."
+                if ! command -v node &> /dev/null; then
+                    # Limpiar directorio si existe
+                    rm -rf $HOME/nodejs
+                    cd /tmp
+                    curl -L -o node-v18.19.0-linux-x64.tar.gz https://nodejs.org/dist/v18.19.0/node-v18.19.0-linux-x64.tar.gz
+                    tar -xzf node-v18.19.0-linux-x64.tar.gz
+                    mv node-v18.19.0-linux-x64 $HOME/nodejs
+                    export PATH=$HOME/nodejs/bin:$PATH
+                    echo 'export PATH=$HOME/nodejs/bin:$PATH' >> ~/.bashrc
+                    cd -
+                fi
+                
+                # Verificar Node.js
+                node --version
+                npm --version
+                
+                # Instalar newman
+                echo "Instalando newman..."
+                npm install -g newman
+                newman --version
+                
+                # Instalar GitHub CLI
+                echo "Instalando GitHub CLI..."
+                if ! command -v gh &> /dev/null; then
+                    # Instalar gh CLI
+                    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+                    chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+                    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+                    apt update && apt install gh -y
+                    gh --version
+                else
+                    echo "GitHub CLI ya está disponible: $(gh --version)"
+                fi
+                
+                # Instalar Python packages usando --user (sin permisos de root)
+                if [ "${SELECTED_ENV}" = "stage" ]; then
+                    echo "Verificando e instalando Python para Locust..."
+                    
+                    # Verificar si Python está disponible
+                    if ! command -v python3 &> /dev/null; then
+                        echo "Python3 no encontrado. Instalando..."
+                        apt-get update && apt-get install -y python3 python3-pip python3-venv
+                        
+                        # Verificar instalación
+                        python3 --version
+                        pip3 --version
+                    else
+                        echo "Python3 ya está disponible: $(python3 --version)"
+                    fi
+                    
+                    echo "Instalando locust..."
+                    python3 -m pip install --user locust --break-system-packages || pip3 install --user locust --break-system-packages
+                else
+                    echo "Saltando instalación de Locust para ambiente ${SELECTED_ENV}"
+                fi
+                
+                # Verificar instalaciones finales
+                echo "=== RESUMEN DE HERRAMIENTAS INSTALADAS ==="
+                kubectl version --client
+                mvn --version
+                node --version
+                npm --version
+                newman --version
+                gh --version || echo "GitHub CLI pendiente de verificar"
+                python3 -m locust --version || echo "Locust pendiente de verificar en PATH"
+                echo "============================================"
+                '''
             }
         }
-
+/*
         stage('Build and Unit Test Java Services') {
             steps {
                 script {
@@ -32,7 +145,7 @@ pipeline {
                     sh './mvnw clean package'
                 }
             }
-        }
+        }*/
 
         stage('Deploy Services to Minikube') {
             // This agent needs kubectl and access to your Minikube cluster.
