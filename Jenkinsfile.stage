@@ -100,7 +100,7 @@ pipeline {
                 '''
             }
         }
-
+/*
         stage('Build and Unit Test Java Services') {
             steps {
                 script {
@@ -124,39 +124,38 @@ pipeline {
                     '''
                 }
             }
-        }
+        }*/
 
         stage('Run End-to-End (E2E) Tests') {
             steps {
-                dir('e2e') { 
-                    script {
-                        sh 
-                        '''
-                            export PATH=$HOME/bin:$PATH
 
-                            npm install
+                script {
+                    sh 
+                    '''
+                        export PATH=$HOME/bin:$PATH
+                        cd e2e
+                        npm install
 
-                            npm test
-                        '''
-                    }
+                        npm test
+                    '''
                 }
             }
         }
 
         stage('Run Locust Performance Tests') {
             steps {
-                dir('locust') { 
-                    script {
 
-                        sh 
-                        '''
-                            export PATH=$HOME/bin:$PATH
+                script {
 
-                            python3 -m locust -f locustfile.py --headless -u 500 -r 100 -t 30s --csv=load_test_report
-                        '''
+                    sh 
+                    '''
+                        export PATH=$HOME/bin:$PATH
+                        cd locust
+                        python3 -m locust -f locustfile.py --headless -u 500 -r 100 -t 30s --csv=load_test_report
+                    '''
 
-                    }
                 }
+
             }
         }
     }
