@@ -1,0 +1,251 @@
+pipeline {
+    agent any // Default agent. Assumes basic tools like git.
+              // If Jenkins runs on Kubernetes, this might be a specific pod template.
+/*
+    environment {
+        // Define any global environment variables if needed.
+        // Example: MINIKUBE_IP = sh(script: 'minikube ip', returnStdout: true).trim()
+    }
+*/
+
+    
+    stages {
+        stage('Preparar Entorno') {
+            steps {
+                sh '''
+                
+
+                export PATH=$HOME/bin:$PATH
+                
+
+                echo "Instalando kubectl"
+                mkdir -p $HOME/bin
+                curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                chmod +x kubectl && mv kubectl $HOME/bin/
+                echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
+                kubectl version --client
+
+                
+
+                cd /tmp
+                curl -L -o openjdk-11.tar.gz https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz
+                tar -xzf openjdk-11.tar.gz
+                rm -rf $HOME/java11
+                mv jdk-11.0.2 $HOME/java11
+                cd -
+
+
+                export JAVA_HOME=$HOME/java11
+                export PATH=$HOME/java11/bin:$PATH
+                
+                echo "Verificando Java para Maven:"
+                java -version
+                javac -version
+                
+
+                rm -rf $HOME/maven
+                cd /tmp
+                curl -sL https://archive.apache.org/dist/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz -o apache-maven-3.8.6-bin.tar.gz
+                tar -xzf apache-maven-3.8.6-bin.tar.gz
+                mv apache-maven-3.8.6 $HOME/maven
+                export PATH=$HOME/maven/bin:$PATH
+                echo 'export PATH=$HOME/maven/bin:$PATH' >> ~/.bashrc
+                cd -
+ 
+
+                
+                rm -rf $HOME/nodejs
+                cd /tmp
+                curl -L -o node-v18.19.0-linux-x64.tar.gz https://nodejs.org/dist/v18.19.0/node-v18.19.0-linux-x64.tar.gz
+                tar -xzf node-v18.19.0-linux-x64.tar.gz
+                mv node-v18.19.0-linux-x64 $HOME/nodejs
+                export PATH=$HOME/nodejs/bin:$PATH
+                echo 'export PATH=$HOME/nodejs/bin:$PATH' >> ~/.bashrc
+                cd -
+                
+
+                node --version
+                npm --version
+                
+
+                echo "Instalando newman..."
+                npm install -g newman
+                newman --version
+                
+
+
+
+                curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+                chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+                echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+                apt update && apt install gh -y
+                gh --version
+
+                
+
+                apt-get update && apt-get install -y python3 python3-pip python3-venv
+                python3 --version
+                pip3 --version
+                python3 -m pip install --user locust --break-system-packages || pip3 install --user locust --break-system-packages
+
+                
+
+                kubectl version --client
+                mvn --version
+                node --version
+                npm --version
+                newman --version
+                gh --version || echo "GitHub CLI pendiente de verificar"
+                python3 -m locust --version || echo "Locust pendiente de verificar en PATH"
+
+                '''
+            }
+        }
+
+        stage('Build and Unit Test Java Services') {
+            steps {
+ 
+                sh 'chmod +x mvnw'
+                sh './mvnw clean package'
+                
+            }
+        }
+
+        stage('Deploy Services to Minikube') {
+            steps {
+                sh '''
+                    export PATH=$HOME/bin:$PATH
+                    chmod +x k8s/deploy-services.sh
+
+                    k8s/deploy-services.sh
+                    
+                    echo "Waiting for services to be ready..."
+                    sleep 60
+                '''
+            }
+
+        }
+
+        stage('Run End-to-End (E2E) Tests') {
+            steps {
+
+                sh '''
+                    cd e2e
+                    export PATH=$HOME/bin:$HOME/maven/bin:$HOME/nodejs/bin:$PATH
+                    cd collections
+                    newman run "Ecommerce e2e tests.postman_collection.json" 
+
+                '''
+                
+            }
+        }
+
+        stage('Run Locust Performance Tests') {
+            steps {
+
+                sh '''
+                    export PATH=$HOME/bin:$HOME/maven/bin:$HOME/nodejs/bin:$HOME/.local/bin:$PATH
+                    cd locust
+                    python3 -m locust -f locustfile.py --headless -u 500 -r 100 -t 30s --csv=load_test_report
+                '''
+
+            }
+
+        }
+
+        stage('Generar Release Notes') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
+                    script {
+                        def now = new Date()
+                        def tag = "v${now.format('yyyy.MM.dd.HHmm')}"
+                        def title = "Production Release ${tag}"
+                        def commitHash = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+                        def commitMessage = sh(returnStdout: true, script: 'git log -1 --pretty=%B').trim()
+                        // Get the last 5 commits: hash and subject
+                        def lastFiveCommitsRaw = sh(returnStdout: true, script: 'git log -5 --pretty=format:"%h %s"').trim()
+                        def lastFiveCommitsList = lastFiveCommitsRaw.split("\\n")
+                        def formattedLastFiveCommits = lastFiveCommitsList.collect { commitLine ->
+                            def parts = commitLine.split(" ", 2)
+                            if (parts.size() == 2) {
+                                return "- ${parts[0]}: ${parts[1]}"
+                            }
+                            return "- ${commitLine}" // Fallback if split fails
+                        }.join("\\n                                ")
+                        
+                        sh """
+                            # Configurar Git
+                            git config user.email "jenkins-ci@ecommerce.com"
+                            git config user.name "Jenkins CI"
+                            git config --global url."https://oauth2:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+                            
+                            # Crear tag y push
+                            git tag ${tag} -m "Production deployment - Build #${env.BUILD_NUMBER}"
+                            git push origin ${tag}
+                            
+                            # Crear release con notas
+                            gh release create ${tag} --generate-notes --title "${title}" --notes "
+                                # Release Notes: ${tag}
+
+                                **Date:** ${now.format('yyyy-MM-dd HH:mm:ss')}  
+                                **Responsible:** Jenkins CI  
+                                **Build Number:** ${env.BUILD_NUMBER}  
+                                
+                                ## Summary
+                                Automated deployment of the e-commerce microservices system to the production environment.
+
+                                ## Current Deployment Trigger
+                                - **Commit Hash:** ${commitHash}
+                                - **Commit Message:** ${commitMessage}
+
+                                ## Recent Changes (Last 5 Commits)
+                                ${formattedLastFiveCommits}
+
+                                ## Validations Performed
+                                - End-to-End tests executed successfully.
+                                - Microservice connectivity verified.
+                                - Main endpoints validated.
+                                - Eureka service registration confirmed.
+
+                                ## Deployed Services
+                                - API Gateway (Port 8080)
+                                - Service Discovery - Eureka (Port 8761)  
+                                - Zipkin Tracing (Port 9411)
+                                - Product Service
+                                - Order Service
+                                - Payment Service
+                                - User Service
+                                - Shipping Service
+                                - Favourite Service
+
+                                ## Important Information
+                                - Services may take 2-3 minutes to become fully operational after deployment.
+                                - Verify network connectivity before accessing service endpoints.
+                                - For any issues, please contact the DevOps team.
+                                "
+                        """
+                        
+                        echo "Release ${tag} creado exitosamente"
+                        echo "Release Notes generadas según buenas prácticas de Change Management"
+                        echo "Disponible en GitHub Releases"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline execution finished.'
+
+        }
+        success {
+            echo 'Pipeline completed successfully!'
+
+        }
+        failure {
+            echo 'Pipeline failed.'
+
+        }
+    }
+}
