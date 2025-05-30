@@ -101,7 +101,7 @@ pipeline {
                 '''
             }
         }
-/*
+
         stage('Build and Unit Test Java Services') {
             steps {
  
@@ -124,7 +124,7 @@ pipeline {
                 '''
             }
 
-        }*/
+        }
 
         stage('Run End-to-End (E2E) Tests') {
             steps {
