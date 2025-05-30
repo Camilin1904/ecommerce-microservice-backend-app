@@ -134,7 +134,7 @@ pipeline {
                     cd e2e
                     export PATH=$HOME/bin:$HOME/maven/bin:$HOME/nodejs/bin:$PATH
                     cd collections
-                    newman run "Ecommere e2e tests.postman_collection.json" 
+                    newman run "Ecommerce e2e tests.postman_collection.json" 
 
                 '''
                 
