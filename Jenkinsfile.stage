@@ -133,7 +133,6 @@ pipeline {
                 sh '''
                     cd e2e
                     export PATH=$HOME/bin:$HOME/maven/bin:$HOME/nodejs/bin:$PATH
-                    npm install
 
                     npm test
                 '''
