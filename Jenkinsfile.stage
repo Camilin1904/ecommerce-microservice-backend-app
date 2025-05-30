@@ -30,6 +30,7 @@ pipeline {
                 cd /tmp
                 curl -L -o openjdk-11.tar.gz https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz
                 tar -xzf openjdk-11.tar.gz
+                rm -rf $HOME/java11
                 mv jdk-11.0.2 $HOME/java11
                 cd -
 
