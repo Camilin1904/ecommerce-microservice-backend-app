@@ -129,16 +129,15 @@ pipeline {
         stage('Run End-to-End (E2E) Tests') {
             steps {
 
-                script {
-                    sh 
-                    '''
-                        export PATH=$HOME/bin:$PATH
-                        cd e2e
-                        npm install
+                sh 
+                '''
+                    export PATH=$HOME/bin:$PATH
+                    cd e2e
+                    npm install
 
-                        npm test
-                    '''
-                }
+                    npm test
+                '''
+                
             }
         }
 
