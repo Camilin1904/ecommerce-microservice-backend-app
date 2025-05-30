@@ -24,15 +24,12 @@ pipeline {
         }
 
         stage('Build and Unit Test Java Services') {
-            agent {
-                docker {
-                    image 'maven:3.9.6-eclipse-temurin-17' // Specify your desired Maven and JDK version
-                    args '-v $HOME/.m2:/root/.m2'         // Cache Maven artifacts
-                }
-            }
             steps {
                 script {
-                    sh 'mvn clean package'
+                    sh 'chmod +x mvnw'
+                    // Assumes 'install' goal runs unit tests.
+                    // Use -DskipITs if integration tests are run separately (e.g., by E2E tests).
+                    sh './mvnw clean package'
                 }
             }
         }
