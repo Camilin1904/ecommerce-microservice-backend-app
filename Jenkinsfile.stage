@@ -14,31 +14,26 @@ pipeline {
             steps {
                 sh '''
                 
-                # Configurar PATH
+
                 export PATH=$HOME/bin:$PATH
                 
-                # Instalar kubectl
-                echo "Verificando kubectl"
-                if ! command -v kubectl &> /dev/null; then
-                    echo "Instalando kubectl"
-                    mkdir -p $HOME/bin
-                    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-                    chmod +x kubectl && mv kubectl $HOME/bin/
-                    echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
-                    kubectl version --client
-                fi
-                
-                # Instalar Java 11 para Maven (el proyecto requiere Java 11)
-                echo "Instalando Java 11 para Maven..."
-                if [ ! -d $HOME/java11 ]; then
-                    cd /tmp
-                    curl -L -o openjdk-11.tar.gz https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz
-                    tar -xzf openjdk-11.tar.gz
-                    mv jdk-11.0.2 $HOME/java11
-                    cd -
-                fi
 
-                # Configurar JAVA_HOME para Maven
+                echo "Instalando kubectl"
+                mkdir -p $HOME/bin
+                curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                chmod +x kubectl && mv kubectl $HOME/bin/
+                echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
+                kubectl version --client
+
+                
+
+                cd /tmp
+                curl -L -o openjdk-11.tar.gz https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz
+                tar -xzf openjdk-11.tar.gz
+                mv jdk-11.0.2 $HOME/java11
+                cd -
+
+
                 export JAVA_HOME=$HOME/java11
                 export PATH=$HOME/java11/bin:$PATH
                 
@@ -46,82 +41,54 @@ pipeline {
                 java -version
                 javac -version
                 
-                # Instalar Maven si no está disponible
-                echo "Verificando Maven..."
-                if ! command -v mvn &> /dev/null; then
-                    echo "Instalando Maven..."
-                    # Limpiar directorio si existe
-                    rm -rf $HOME/maven
-                    cd /tmp
-                    curl -sL https://archive.apache.org/dist/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz -o apache-maven-3.8.6-bin.tar.gz
-                    tar -xzf apache-maven-3.8.6-bin.tar.gz
-                    mv apache-maven-3.8.6 $HOME/maven
-                    export PATH=$HOME/maven/bin:$PATH
-                    echo 'export PATH=$HOME/maven/bin:$PATH' >> ~/.bashrc
-                    cd -
-                fi
+
+                rm -rf $HOME/maven
+                cd /tmp
+                curl -sL https://archive.apache.org/dist/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz -o apache-maven-3.8.6-bin.tar.gz
+                tar -xzf apache-maven-3.8.6-bin.tar.gz
+                mv apache-maven-3.8.6 $HOME/maven
+                export PATH=$HOME/maven/bin:$PATH
+                echo 'export PATH=$HOME/maven/bin:$PATH' >> ~/.bashrc
+                cd -
+ 
+
                 
-                # Verificar Maven
-                mvn --version
+                rm -rf $HOME/nodejs
+                cd /tmp
+                curl -L -o node-v18.19.0-linux-x64.tar.gz https://nodejs.org/dist/v18.19.0/node-v18.19.0-linux-x64.tar.gz
+                tar -xzf node-v18.19.0-linux-x64.tar.gz
+                mv node-v18.19.0-linux-x64 $HOME/nodejs
+                export PATH=$HOME/nodejs/bin:$PATH
+                echo 'export PATH=$HOME/nodejs/bin:$PATH' >> ~/.bashrc
+                cd -
                 
-                # Descargar e instalar Node.js binario (sin apt-get)
-                echo "Instalando Node.js binario..."
-                if ! command -v node &> /dev/null; then
-                    # Limpiar directorio si existe
-                    rm -rf $HOME/nodejs
-                    cd /tmp
-                    curl -L -o node-v18.19.0-linux-x64.tar.gz https://nodejs.org/dist/v18.19.0/node-v18.19.0-linux-x64.tar.gz
-                    tar -xzf node-v18.19.0-linux-x64.tar.gz
-                    mv node-v18.19.0-linux-x64 $HOME/nodejs
-                    export PATH=$HOME/nodejs/bin:$PATH
-                    echo 'export PATH=$HOME/nodejs/bin:$PATH' >> ~/.bashrc
-                    cd -
-                fi
-                
-                # Verificar Node.js
+
                 node --version
                 npm --version
                 
-                # Instalar newman
+
                 echo "Instalando newman..."
                 npm install -g newman
                 newman --version
                 
-                # Instalar GitHub CLI
-                echo "Instalando GitHub CLI..."
-                if ! command -v gh &> /dev/null; then
-                    # Instalar gh CLI
-                    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-                    chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
-                    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-                    apt update && apt install gh -y
-                    gh --version
-                else
-                    echo "GitHub CLI ya está disponible: $(gh --version)"
-                fi
-                
-                # Instalar Python packages usando --user (sin permisos de root)
 
-                echo "Verificando e instalando Python para Locust..."
+
+
+                curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+                chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg
+                echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+                apt update && apt install gh -y
+                gh --version
+
                 
-                # Verificar si Python está disponible
-                if ! command -v python3 &> /dev/null; then
-                    echo "Python3 no encontrado. Instalando..."
-                    apt-get update && apt-get install -y python3 python3-pip python3-venv
-                    
-                    # Verificar instalación
-                    python3 --version
-                    pip3 --version
-                else
-                    echo "Python3 ya está disponible: $(python3 --version)"
-                fi
-                
-                echo "Instalando locust..."
+
+                apt-get update && apt-get install -y python3 python3-pip python3-venv
+                python3 --version
+                pip3 --version
                 python3 -m pip install --user locust --break-system-packages || pip3 install --user locust --break-system-packages
 
                 
-                # Verificar instalaciones finales
-                echo "=== RESUMEN DE HERRAMIENTAS INSTALADAS ==="
+
                 kubectl version --client
                 mvn --version
                 node --version
@@ -129,21 +96,19 @@ pipeline {
                 newman --version
                 gh --version || echo "GitHub CLI pendiente de verificar"
                 python3 -m locust --version || echo "Locust pendiente de verificar en PATH"
-                echo "============================================"
+
                 '''
             }
         }
-/*
+
         stage('Build and Unit Test Java Services') {
             steps {
                 script {
                     sh 'chmod +x mvnw'
-                    // Assumes 'install' goal runs unit tests.
-                    // Use -DskipITs if integration tests are run separately (e.g., by E2E tests).
                     sh './mvnw clean package'
                 }
             }
-        }*/
+        }
 
         stage('Deploy Services to Minikube') {
             steps {
@@ -161,15 +126,16 @@ pipeline {
 
         stage('Run End-to-End (E2E) Tests') {
             steps {
-                dir('e2e') { // Change to the e2e directory
+                dir('e2e') { 
                     script {
-                        sh 'export PATH=$HOME/bin:$PATH'
+                        sh 
+                        '''
+                            export PATH=$HOME/bin:$PATH
 
-                        sh 'npm install'
-                        // Assumes 'npm test' in e2e/package.json runs your Newman tests.
-                        // Example: "test": "newman run collections/mycollection.postman_collection.json -e environments/myenvironment.postman_environment.json"
-                        // Or if using newman-runner.js: "test": "node newman-runner.js"
-                        sh 'npm test'
+                            npm install
+
+                            npm test
+                        '''
                     }
                 }
             }
@@ -177,17 +143,16 @@ pipeline {
 
         stage('Run Locust Performance Tests') {
             steps {
-                dir('locust') { // Change to the locust directory
+                dir('locust') { 
                     script {
-                        sh 'export PATH=$HOME/bin:$PATH'
 
-                        // Adjust the Locust command as needed.
-                        // The --host should point to your application's entry point in Minikube.
-                        // This might be an IP and NodePort, e.g., http://$(minikube ip):<service-nodeport>
-                        // You may need to retrieve this dynamically or have a fixed setup.
-                        sh 'locust -f locustfile.py --headless -u 10 -r 2 --run-time 1m --host=http://api-gateway-service:8080'
-                        // Replace 'http://api-gateway-service.default.svc.cluster.local:8080' with your actual application host within the cluster if locust runs in-cluster,
-                        // or an externally accessible Minikube service URL if locust runs outside the Minikube network directly.
+                        sh 
+                        '''
+                            export PATH=$HOME/bin:$PATH
+
+                            python3 -m locust -f locustfile.py --headless -u 500 -r 100 -t 30s --csv=load_test_report
+                        '''
+
                     }
                 }
             }
@@ -197,18 +162,15 @@ pipeline {
     post {
         always {
             echo 'Pipeline execution finished.'
-            // JUnit publisher to archive test results (if surefire/failsafe reports are generated)
-            // junit '**/target/surefire-reports/*.xml'
-            // Clean up workspace
-            // cleanWs()
+
         }
         success {
             echo 'Pipeline completed successfully!'
-            // Add success notifications if needed
+
         }
         failure {
             echo 'Pipeline failed.'
-            // Add failure notifications if needed (e.g., email, Slack)
+
         }
     }
 }
