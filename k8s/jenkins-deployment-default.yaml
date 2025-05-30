@@ -17,6 +17,8 @@ spec:
       containers:
       - name: jenkins
         image: jenkins/jenkins:lts-jdk11
+        securityContext:
+          runAsUser: 0
         ports:
         - containerPort: 8080
         - containerPort: 50000
@@ -25,6 +27,8 @@ spec:
           mountPath: /var/jenkins_home
         - name: docker-socket
           mountPath: /var/run/docker.sock
+        - name: docker-bin
+          mountPath: /usr/bin/docker
       volumes:
       - name: jenkins-home
         persistentVolumeClaim:
@@ -33,6 +37,10 @@ spec:
         hostPath:
           path: /var/run/docker.sock
           type: Socket
+      - name: docker-bin
+        hostPath:
+          path: /usr/bin/docker
+          type: File
 ---
 apiVersion: v1
 kind: Service
