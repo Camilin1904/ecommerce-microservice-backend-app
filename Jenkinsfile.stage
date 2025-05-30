@@ -9,7 +9,7 @@ pipeline {
 */
 
     
-          stages {
+    stages {
         stage('Preparar Entorno') {
             steps {
                 sh '''
@@ -149,18 +149,15 @@ pipeline {
         }*/
 
         stage('Deploy Services to Minikube') {
-            // This agent needs kubectl and access to your Minikube cluster.
-            // If 'agent any' doesn't have it, configure a specific agent (e.g., a K8s pod with kubectl).
-            agent any
             steps {
                 script {
-                    sh 'export PATH=$HOME/bin:$PATH'
-                    sh 'chmod +x k8s/deploy-services.sh'
-                    sh 'chmod +x k8s/kubectl'
-                    // Ensure your deploy script (k8s/deploy-services.sh) is configured
-                    // to target your Minikube instance.
-                    // It might require MINIKUBE_PROFILE or KUBECONFIG to be set.
-                    sh 'k8s/deploy-services.sh'
+                    sh '''
+                        export PATH=$HOME/bin:$PATH'
+                        chmod +x k8s/deploy-services.sh
+                        chmod +x k8s/kubectl
+
+                        k8s/deploy-services.sh
+                    '''
                 }
             }
         }
