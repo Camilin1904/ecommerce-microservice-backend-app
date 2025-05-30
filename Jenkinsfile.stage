@@ -7,6 +7,8 @@ pipeline {
         // Example: MINIKUBE_IP = sh(script: 'minikube ip', returnStdout: true).trim()
     }
 */
+
+    
     stages {
         stage('Checkout Source Code') {
             steps {
@@ -15,6 +17,8 @@ pipeline {
                     // Otherwise, use: git url: 'your-git-repo-url', branch: 'your-branch'
                     checkout scm
                     sh 'echo "Current directory:" && pwd && ls -la'
+
+                    sh 'export PATH=$HOME/bin:$PATH'
                 }
             }
         }
