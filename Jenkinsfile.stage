@@ -154,6 +154,7 @@ pipeline {
             steps {
                 script {
                     sh 'chmod +x k8s/deploy-services.sh'
+                    sh 'chmod +x k8s/kubectl'
                     // Ensure your deploy script (k8s/deploy-services.sh) is configured
                     // to target your Minikube instance.
                     // It might require MINIKUBE_PROFILE or KUBECONFIG to be set.
@@ -163,12 +164,6 @@ pipeline {
         }
 
         stage('Run End-to-End (E2E) Tests') {
-            agent {
-                docker {
-                    image 'node:18' // Specify your desired Node.js version
-                    // args '-v $HOME/.npm:/root/.npm' // Optional: Cache npm packages
-                }
-            }
             steps {
                 dir('e2e') { // Change to the e2e directory
                     script {
@@ -183,11 +178,6 @@ pipeline {
         }
 
         stage('Run Locust Performance Tests') {
-            agent {
-                docker {
-                    image 'locustio/locust'
-                }
-            }
             steps {
                 dir('locust') { // Change to the locust directory
                     script {
