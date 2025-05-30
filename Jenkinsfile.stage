@@ -32,10 +32,7 @@ pipeline {
             }
             steps {
                 script {
-                    sh 'chmod +x mvnw'
-                    // Assumes 'install' goal runs unit tests.
-                    // Use -DskipITs if integration tests are run separately (e.g., by E2E tests).
-                    sh './mvnw clean package'
+                    sh 'mvn clean package'
                 }
             }
         }
