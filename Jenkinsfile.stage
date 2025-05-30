@@ -1,12 +1,12 @@
 pipeline {
     agent any // Default agent. Assumes basic tools like git.
               // If Jenkins runs on Kubernetes, this might be a specific pod template.
-
+/*
     environment {
         // Define any global environment variables if needed.
         // Example: MINIKUBE_IP = sh(script: 'minikube ip', returnStdout: true).trim()
     }
-
+*/
     stages {
         stage('Checkout Source Code') {
             steps {
