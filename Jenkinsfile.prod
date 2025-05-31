@@ -138,7 +138,7 @@ pipeline {
 
         stage('Generar Release Notes') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
+                withCredentials([usernamePassword(credentialsId: '9c720693-c3ac-45c9-8192-78d0189acda3', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
                     script {
                         def now = new Date()
                         def tag = "v${now.format('yyyy.MM.dd.HHmm')}"
