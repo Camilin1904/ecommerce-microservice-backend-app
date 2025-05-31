@@ -18,8 +18,6 @@ spec:
       - name: proxy-client
         image: proxy-client:latest
         imagePullPolicy: IfNotPresent
-        build:
-          context: ../proxy-client
         ports:
         - containerPort: 8900
         env:
