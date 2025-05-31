@@ -26,34 +26,6 @@ pipeline {
                 kubectl version --client
 
                 
-
-                cd /tmp
-                curl -L -o openjdk-11.tar.gz https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz
-                tar -xzf openjdk-11.tar.gz
-                rm -rf $HOME/java11
-                mv jdk-11.0.2 $HOME/java11
-                cd -
-
-
-                export JAVA_HOME=$HOME/java11
-                export PATH=$HOME/java11/bin:$PATH
-                
-                echo "Verificando Java para Maven:"
-                java -version
-                javac -version
-                
-
-                rm -rf $HOME/maven
-                cd /tmp
-                curl -sL https://archive.apache.org/dist/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz -o apache-maven-3.8.6-bin.tar.gz
-                tar -xzf apache-maven-3.8.6-bin.tar.gz
-                mv apache-maven-3.8.6 $HOME/maven
-                export PATH=$HOME/maven/bin:$PATH
-                echo 'export PATH=$HOME/maven/bin:$PATH' >> ~/.bashrc
-                cd -
- 
-
-                
                 rm -rf $HOME/nodejs
                 cd /tmp
                 curl -L -o node-v18.19.0-linux-x64.tar.gz https://nodejs.org/dist/v18.19.0/node-v18.19.0-linux-x64.tar.gz
