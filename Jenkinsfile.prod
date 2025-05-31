@@ -89,7 +89,7 @@ pipeline {
             steps {
  
                 sh 'chmod +x mvnw'
-                sh 'mvn clean package'
+                sh './mvnw clean package'
                 
             }
         }
