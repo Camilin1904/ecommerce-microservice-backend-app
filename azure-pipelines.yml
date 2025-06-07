@@ -40,19 +40,19 @@ steps:
     includeLatestTag: true
 
     
-# - task: KubectlInstaller@0
-#   inputs:
-#     kubectlVersion: 'latest'
+- task: KubectlInstaller@0
+  inputs:
+    kubectlVersion: 'latest'
 
-# - task: KubernetesManifest@1
-#   inputs:
-#     action: 'deploy'
-#     connectionType: 'azureResourceManager'
-#     azureSubscriptionConnection: 'ecommerce-connection-manual'
-#     azureResourceGroup: 'rg-ecommerce-prod'
-#     kubernetesCluster: 'aks-ecommerce-prod'
-#     useClusterAdmin: true
-#     manifests: 'k8s/*.yaml'
+- task: KubernetesManifest@1
+  inputs:
+    action: 'deploy'
+    connectionType: 'azureResourceManager'
+    azureSubscriptionConnection: 'ecommerce-connection-manual'
+    azureResourceGroup: 'rg-ecommerce-prod'
+    kubernetesCluster: 'aks-ecommerce-prod'
+    useClusterAdmin: true
+    manifests: 'k8s/*.yaml'
 
 
 
