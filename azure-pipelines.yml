@@ -29,7 +29,7 @@ steps:
     azureSubscriptionConnection: 'ecommerce-connection-manual'
     azureResourceGroup: 'rg-ecommerce-prod'
     kubernetesCluster: 'aks-ecommerce-prod'
-    manifests: '/k8s/'
+    manifests: 'k8s/*.yaml'
 
 
 
