@@ -18,19 +18,29 @@ steps:
 #     publishJUnitResults: true
 #     testResultsFiles: '**/surefire-reports/TEST-*.xml'
 #     goals: 'package'
-- task: KubectlInstaller@0
-  inputs:
-    kubectlVersion: 'latest'
 
-- task: KubernetesManifest@1
+- task: DockerCompose@1
   inputs:
-    action: 'deploy'
-    connectionType: 'azureResourceManager'
-    azureSubscriptionConnection: 'ecommerce-connection-manual'
-    azureResourceGroup: 'rg-ecommerce-prod'
-    kubernetesCluster: 'aks-ecommerce-prod'
-    useClusterAdmin: true
-    manifests: 'k8s/*.yaml'
+    containerregistrytype: 'Azure Container Registry'
+    azureSubscription: 'ecommerce-connection-manual'
+    azureContainerRegistry: '{"loginServer":"ecommerceregistry.azurecr.io", "id" : "/subscriptions/04d24379-e818-4b93-8a1f-0433576723a4/resourceGroups/rg-terraform-state/providers/Microsoft.ContainerRegistry/registries/ecommerceRegistry"}'
+    dockerComposeFile: '**/compose.yml'
+    action: 'Push services'
+    includeLatestTag: true
+    
+# - task: KubectlInstaller@0
+#   inputs:
+#     kubectlVersion: 'latest'
+
+# - task: KubernetesManifest@1
+#   inputs:
+#     action: 'deploy'
+#     connectionType: 'azureResourceManager'
+#     azureSubscriptionConnection: 'ecommerce-connection-manual'
+#     azureResourceGroup: 'rg-ecommerce-prod'
+#     kubernetesCluster: 'aks-ecommerce-prod'
+#     useClusterAdmin: true
+#     manifests: 'k8s/*.yaml'
 
 
 
