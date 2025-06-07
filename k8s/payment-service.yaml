@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: payment-service
-        image: camilin19/payment-service:latest
+        image: ecommeceRegistry.azurecr.io/camilin19/payment-service:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8400

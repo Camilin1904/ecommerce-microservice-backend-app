@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: service-discovery
-        image: camilin19/service-discovery:latest
+        image: ecommeceRegistry.azurecr.io/camilin19/service-discovery:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8761

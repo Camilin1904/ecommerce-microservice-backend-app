@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: order-service
-        image: camilin19/order-service:latest
+        image: ecommeceRegistry.azurecr.io/camilin19/order-service:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8300

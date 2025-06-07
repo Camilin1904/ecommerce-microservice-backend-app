@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: api-gateway
-        image: camilin19/api-gateway:latest
+        image: ecommeceRegistry.azurecr.io/camilin19/api-gateway:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080

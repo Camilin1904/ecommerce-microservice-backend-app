@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: favourite-service
-        image: camilin19/favourite-service:latest
+        image: ecommeceRegistry.azurecr.io/camilin19/favourite-service:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8800
