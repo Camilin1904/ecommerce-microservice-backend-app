@@ -1,4 +1,3 @@
-
 trigger:
 - develop
 - stage
@@ -8,57 +7,30 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-- task: Maven@3
-  inputs:
-    mavenPomFile: 'pom.xml'
-    mavenOptions: '-Xmx3072m'
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '11'
-    jdkArchitectureOption: 'x64'
-    publishJUnitResults: true
-    testResultsFiles: '**/surefire-reports/TEST-*.xml'
-    goals: 'package'
+
+# - task: Maven@3
+#   inputs:
+#     mavenPomFile: 'pom.xml'
+#     mavenOptions: '-Xmx3072m'
+#     javaHomeOption: 'JDKVersion'
+#     jdkVersionOption: '11'
+#     jdkArchitectureOption: 'x64'
+#     publishJUnitResults: true
+#     testResultsFiles: '**/surefire-reports/TEST-*.xml'
+#     goals: 'package'
 - task: KubectlInstaller@0
   inputs:
     kubectlVersion: 'latest'
 
-- task: AzureCLI@2
-  displayName: 'Deploy to AKS with proper permissions'
+- task: KubernetesManifest@1
   inputs:
-    azureSubscription: 'ecommerce-connection-manual'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      # Install kubelogin
-      echo "Installing kubelogin..."
-      curl -LO https://github.com/Azure/kubelogin/releases/latest/download/kubelogin-linux-amd64.zip
-      unzip kubelogin-linux-amd64.zip
-      sudo mv bin/linux_amd64/kubelogin /usr/local/bin/
-      sudo chmod +x /usr/local/bin/kubelogin
-      
-      # Get AKS credentials with admin access
-      echo "Getting AKS admin credentials..."
-      az aks get-credentials --resource-group rg-ecommerce-prod --name aks-ecommerce-prod --overwrite-existing --admin
-      
-      # Test cluster connectivity
-      echo "Testing cluster connectivity..."
-      kubectl cluster-info
-      
-      # Create namespace and RBAC first
-      echo "Creating namespace and RBAC..."
-      kubectl apply -f k8s/namespace.yaml --timeout=60s
-      
-      # Wait a moment for RBAC to propagate
-      sleep 10
-      
-      # Deploy using kustomization
-      echo "Deploying all services using kustomization..."
-      kubectl apply -k k8s/ --timeout=300s
-      
-      # Check deployment status
-      echo "Checking deployment status..."
-      kubectl get pods -n ecommerce
-      kubectl get services -n ecommerce
+    action: 'deploy'
+    connectionType: 'azureResourceManager'
+    azureSubscriptionConnection: 'ecommerce-connection-manual'
+    azureResourceGroup: 'rg-ecommerce-prod'
+    kubernetesCluster: 'aks-ecommerce-prod'
+    useClusterAdmin: true
+    manifests: 'k8s/*.yaml'
 
 
 
