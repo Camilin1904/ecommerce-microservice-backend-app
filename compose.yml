@@ -136,6 +136,15 @@ services:
 
     networks:
       - ecommerce-net
+  
+  newman:
+    image: camilin19/newman:latest
+    build:
+      context: ./newman
+    ports:
+      - 8901:8901
+    networks:
+      - ecommerce-net
 
 networks:
   ecommerce-net:
