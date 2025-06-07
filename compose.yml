@@ -140,7 +140,7 @@ services:
   newman:
     image: camilin19/newman:latest
     build:
-      context: ./newman
+      context: ./e2e
     ports:
       - 8901:8901
     networks:
