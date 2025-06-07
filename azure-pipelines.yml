@@ -8,16 +8,38 @@ pool:
 
 steps:
 
-# - task: Maven@3
-#   inputs:
-#     mavenPomFile: 'pom.xml'
-#     mavenOptions: '-Xmx3072m'
-#     javaHomeOption: 'JDKVersion'
-#     jdkVersionOption: '11'
-#     jdkArchitectureOption: 'x64'
-#     publishJUnitResults: true
-#     testResultsFiles: '**/surefire-reports/TEST-*.xml'
-#     goals: 'package'
+- task: Maven@3
+  inputs:
+    mavenPomFile: 'pom.xml'
+    mavenOptions: '-Xmx3072m'
+    javaHomeOption: 'JDKVersion'
+    jdkVersionOption: '11'
+    jdkArchitectureOption: 'x64'
+    publishJUnitResults: true
+    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+    goals: 'package'
+
+- task: DockerCompose@1
+  inputs:
+    containerregistrytype: 'Azure Container Registry'
+    azureSubscription: 'ecommerce-connection-manual'
+    azureContainerRegistry: '{"loginServer":"ecommerceregistry.azurecr.io", "id" : "/subscriptions/04d24379-e818-4b93-8a1f-0433576723a4/resourceGroups/rg-terraform-state/providers/Microsoft.ContainerRegistry/registries/ecommerceRegistry"}'
+    dockerComposeFile: 'compose.yml'
+    projectName: 'ecommerce'
+    action: 'Build services'
+    includeLatestTag: true
+
+- task: DockerCompose@1
+  inputs:
+    containerregistrytype: 'Azure Container Registry'
+    azureSubscription: 'ecommerce-connection-manual'
+    azureContainerRegistry: '{"loginServer":"ecommerceregistry.azurecr.io", "id" : "/subscriptions/04d24379-e818-4b93-8a1f-0433576723a4/resourceGroups/rg-terraform-state/providers/Microsoft.ContainerRegistry/registries/ecommerceRegistry"}'
+    dockerComposeFile: 'compose.yml'
+    projectName: 'ecommerce'
+    action: 'Push services'
+    includeLatestTag: true
+
+    
 - task: KubectlInstaller@0
   inputs:
     kubectlVersion: 'latest'
