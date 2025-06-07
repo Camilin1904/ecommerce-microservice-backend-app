@@ -23,33 +23,42 @@ steps:
     kubectlVersion: 'latest'
 
 - task: AzureCLI@2
-  displayName: 'Install kubelogin'
+  displayName: 'Deploy to AKS with proper permissions'
   inputs:
     azureSubscription: 'ecommerce-connection-manual'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
       # Install kubelogin
+      echo "Installing kubelogin..."
       curl -LO https://github.com/Azure/kubelogin/releases/latest/download/kubelogin-linux-amd64.zip
       unzip kubelogin-linux-amd64.zip
       sudo mv bin/linux_amd64/kubelogin /usr/local/bin/
       sudo chmod +x /usr/local/bin/kubelogin
       
-      # Get AKS credentials
-      az aks get-credentials --resource-group rg-ecommerce-prod --name aks-ecommerce-prod --overwrite-existing
+      # Get AKS credentials with admin access
+      echo "Getting AKS admin credentials..."
+      az aks get-credentials --resource-group rg-ecommerce-prod --name aks-ecommerce-prod --overwrite-existing --admin
       
-      # Convert kubeconfig to use kubelogin
-      kubelogin convert-kubeconfig -l azurecli
-
-- task: KubernetesManifest@1
-  inputs:
-    action: 'deploy'
-    connectionType: 'azureResourceManager'
-    azureSubscriptionConnection: 'ecommerce-connection-manual'
-    azureResourceGroup: 'rg-ecommerce-prod'
-    kubernetesCluster: 'aks-ecommerce-prod'
-    manifests: 'k8s/*.yaml'
-    forceUpdateDeployment: true
+      # Test cluster connectivity
+      echo "Testing cluster connectivity..."
+      kubectl cluster-info
+      
+      # Create namespace and RBAC first
+      echo "Creating namespace and RBAC..."
+      kubectl apply -f k8s/namespace.yaml --timeout=60s
+      
+      # Wait a moment for RBAC to propagate
+      sleep 10
+      
+      # Deploy using kustomization
+      echo "Deploying all services using kustomization..."
+      kubectl apply -k k8s/ --timeout=300s
+      
+      # Check deployment status
+      echo "Checking deployment status..."
+      kubectl get pods -n ecommerce
+      kubectl get services -n ecommerce
 
 
 
