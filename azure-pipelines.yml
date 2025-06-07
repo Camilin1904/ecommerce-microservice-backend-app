@@ -22,6 +22,25 @@ steps:
   inputs:
     kubectlVersion: 'latest'
 
+- task: AzureCLI@2
+  displayName: 'Install kubelogin'
+  inputs:
+    azureSubscription: 'ecommerce-connection-manual'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      # Install kubelogin
+      curl -LO https://github.com/Azure/kubelogin/releases/latest/download/kubelogin-linux-amd64.zip
+      unzip kubelogin-linux-amd64.zip
+      sudo mv bin/linux_amd64/kubelogin /usr/local/bin/
+      sudo chmod +x /usr/local/bin/kubelogin
+      
+      # Get AKS credentials
+      az aks get-credentials --resource-group rg-ecommerce-prod --name aks-ecommerce-prod --overwrite-existing
+      
+      # Convert kubeconfig to use kubelogin
+      kubelogin convert-kubeconfig -l azurecli
+
 - task: KubernetesManifest@1
   inputs:
     action: 'deploy'
@@ -30,6 +49,7 @@ steps:
     azureResourceGroup: 'rg-ecommerce-prod'
     kubernetesCluster: 'aks-ecommerce-prod'
     manifests: 'k8s/*.yaml'
+    forceUpdateDeployment: true
 
 
 
