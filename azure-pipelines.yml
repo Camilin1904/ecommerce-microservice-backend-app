@@ -25,9 +25,11 @@ steps:
     azureSubscription: 'ecommerce-connection-manual'
     azureContainerRegistry: '{"loginServer":"ecommerceregistry.azurecr.io", "id" : "/subscriptions/04d24379-e818-4b93-8a1f-0433576723a4/resourceGroups/rg-terraform-state/providers/Microsoft.ContainerRegistry/registries/ecommerceRegistry"}'
     dockerComposeFile: '**/compose.yml'
-    projectName: 'eccomerce'
-    action: 'Push services'
+    projectName: 'ecommerce'
+    action: 'Build services'
     includeLatestTag: true
+
+
     
 # - task: KubectlInstaller@0
 #   inputs:
