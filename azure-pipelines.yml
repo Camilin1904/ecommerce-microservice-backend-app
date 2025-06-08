@@ -74,6 +74,7 @@ steps:
     connectionType: 'Azure Resource Manager'
     azureSubscriptionEndpoint: 'ecommerce-connection-manual'
     azureResourceGroup: 'rg-ecommerce-prod'
+    useClusterAdmin: true
     kubernetesCluster: 'aks-ecommerce-prod'
     command: 'logs'
     arguments: 'job/newman-job'
