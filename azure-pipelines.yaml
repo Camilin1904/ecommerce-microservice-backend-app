@@ -9,11 +9,10 @@ jobs:
       - task: ManualValidation@1
         inputs:
           notifyUsers: |
-            camilo.carmona@u.icesi.edu.co
-            juan.libreros4@u.icesi.edu.co
+            cami.car.val@outlook.com
           approvers: |
-            camilo.carmona@u.icesi.edu.co
-            juan.libreros4@u.icesi.edu.co
+            cami.car.val@outlook.com
+
 
   - job: Deploy_to_prod
     pool:
