@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stress-dashboard
+  labels:
+    app: stress-dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stress-dashboard
+  template:
+    metadata:
+      labels:
+        app: stress-dashboard
+    spec:
+      containers:
+      - name: stress-dashboard
+        image: camilin19/stress-dashboard:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8085
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stress-dashboard
+spec:
+  selector:
+    app: stress-dashboard
+  ports:
+  - port: 8085
+    targetPort: 8085
+    nodePort: 30081
+  type: NodePort

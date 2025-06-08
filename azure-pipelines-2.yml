@@ -55,8 +55,8 @@ jobs:
           action: 'deploy'
           connectionType: 'azureResourceManager'
           azureSubscriptionConnection: 'ecommerce-connection-manual'
-          azureResourceGroup: 'rg-ecommerce-prod'
-          kubernetesCluster: 'aks-ecommerce-prod'
+          azureResourceGroup: 'rg-ecommerce-stage'
+          kubernetesCluster: 'aks-ecommerce-stage'
           useClusterAdmin: true
           manifests: 'k8s/*.yaml'
 
@@ -65,8 +65,8 @@ jobs:
           action: 'deploy'
           connectionType: 'azureResourceManager'
           azureSubscriptionConnection: 'ecommerce-connection-manual'
-          azureResourceGroup: 'rg-ecommerce-prod'
-          kubernetesCluster: 'aks-ecommerce-prod'
+          azureResourceGroup: 'rg-ecommerce-stage'
+          kubernetesCluster: 'aks-ecommerce-stage'
           useClusterAdmin: true
           manifests: 'k8s/e2e/e2e.yaml'
 
@@ -74,9 +74,9 @@ jobs:
         inputs:
           connectionType: 'Azure Resource Manager'
           azureSubscriptionEndpoint: 'ecommerce-connection-manual'
-          azureResourceGroup: 'rg-ecommerce-prod'
+          azureResourceGroup: 'rg-ecommerce-stage'
           useClusterAdmin: true
-          kubernetesCluster: 'aks-ecommerce-prod'
+          kubernetesCluster: 'aks-ecommerce-stage'
           command: 'logs'
           arguments: 'job/newman-job'
           secretType: 'dockerRegistry'
