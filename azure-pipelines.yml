@@ -1,6 +1,4 @@
 trigger:
-- develop
-- stage
 - master
 
 pool:
