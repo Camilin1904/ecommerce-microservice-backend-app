@@ -3,19 +3,7 @@ trigger:
 
 jobs:
 
-  - job: Validate
-    pool: server
-    steps:
-      - task: ManualValidation@1
-        inputs:
-          notifyUsers: |
-            camilo.carmona@u.icesi.edu.co
-            juan.libreros4@u.icesi.edu.co
-          approvers: |
-            camilo.carmona@u.icesi.edu.co
-            juan.libreros4@u.icesi.edu.co
-
-  - job: Deploy_to_prod
+  - job: Deploy_to_stage
     pool:
       vmImage: ubuntu-latest
 
@@ -93,6 +81,7 @@ jobs:
           arguments: 'job/newman-job'
           secretType: 'dockerRegistry'
           containerRegistryType: 'Azure Container Registry' 
+          
 
 
 
