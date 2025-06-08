@@ -59,5 +59,26 @@ steps:
     useClusterAdmin: true
     manifests: 'k8s/*.yaml'
 
+- task: KubernetesManifest@1
+  inputs:
+    action: 'deploy'
+    connectionType: 'azureResourceManager'
+    azureSubscriptionConnection: 'ecommerce-connection-manual'
+    azureResourceGroup: 'rg-ecommerce-prod'
+    kubernetesCluster: 'aks-ecommerce-prod'
+    manifests: '/k8s/e2e'
+
+- task: Kubernetes@1
+  inputs:
+    connectionType: 'Azure Resource Manager'
+    azureSubscriptionEndpoint: 'ecommerce-connection-manual'
+    azureResourceGroup: 'rg-ecommerce-prod'
+    kubernetesCluster: 'aks-ecommerce-prod'
+    command: 'logs'
+    arguments: 'job/newman-job'
+    secretType: 'dockerRegistry'
+    containerRegistryType: 'Azure Container Registry'
+
+
 
 
