@@ -83,6 +83,38 @@ jobs:
           containerRegistryType: 'Azure Container Registry' 
           
 
+      - task: Kubernetes@1
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscriptionEndpoint: 'ecommerce-connection-manual'
+          azureResourceGroup: 'rg-ecommerce-stage'
+          kubernetesCluster: 'aks-ecommerce-stage'
+          useClusterAdmin: true
+          command: 'get'
+          arguments: 'service api-gateway -o jsonpath=''{.status.loadBalancer.ingress[0].ip}'''
+          secretType: 'dockerRegistry'
+          containerRegistryType: 'Azure Container Registry'
+      
+      - task: KubernetesManifest@1
+        inputs:
+          action: 'deploy'
+          connectionType: 'azureResourceManager'
+          azureSubscriptionConnection: 'ecommerce-connection-manual'
+          azureResourceGroup: 'rg-ecommerce-stage'
+          kubernetesCluster: 'aks-ecommerce-stage'
+          useClusterAdmin: true
+          manifests: 'k8s/locust/stress-dashboard.yaml'
 
+      - task: Kubernetes@1
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscriptionEndpoint: 'ecommerce-connection-manual'
+          azureResourceGroup: 'rg-ecommerce-stage'
+          kubernetesCluster: 'aks-ecommerce-stage'
+          useClusterAdmin: true
+          command: 'get'
+          arguments: 'service stress-dashboard -o jsonpath=''{.status.loadBalancer.ingress[0].ip}'''
+          secretType: 'dockerRegistry'
+          containerRegistryType: 'Azure Container Registry'
 
 
