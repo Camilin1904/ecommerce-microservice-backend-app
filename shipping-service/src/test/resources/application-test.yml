@@ -18,11 +18,24 @@ spring:
     console:
       enabled: true
   flyway:
-    enabled: false
-      
-eureka:
-  client:
-    enabled: false
+    enabled: false     
     
 zipkin:
   enabled: false
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+  hystrix:
+    enabled: false
+    
+ribbon:
+  eureka:
+    enabled: false
+    
+app:
+  services:
+    product-service: http://localhost:${wiremock.server.port:9999}
