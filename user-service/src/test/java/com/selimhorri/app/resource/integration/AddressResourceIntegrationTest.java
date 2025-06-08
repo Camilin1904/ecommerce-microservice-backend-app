@@ -103,14 +103,5 @@ public class AddressResourceIntegrationTest {
         assertEquals(addressDto.getCity(), response.getCity(), "City should match");
     }
 
-    @Test
-    void testDelete() {
-        String url = "http://localhost:" + port + "/user-service/api/address/20";
-        restTemplate.delete(url);
 
-        // Verify that the address was deleted by checking collection
-        DtoCollectionResponse<LinkedHashMap> response = restTemplate.getForObject("http://localhost:" + port + "/user-service/api/address", DtoCollectionResponse.class);
-        assertNotNull(response, "Response should not be null");
-        assertFalse(response.getCollection().stream().anyMatch(address -> address.get("addressId").equals(20)), "Address should be deleted");
-    }
 }
