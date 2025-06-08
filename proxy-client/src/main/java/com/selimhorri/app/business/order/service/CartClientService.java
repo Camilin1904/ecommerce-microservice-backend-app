@@ -16,31 +16,38 @@ import org.springframework.web.bind.annotation.RequestBody;
 import com.selimhorri.app.business.order.model.CartDto;
 import com.selimhorri.app.business.order.model.response.CartOrderServiceDtoCollectionResponse;
 
+import io.github.resilience4j.retry.annotation.Retry;
+
 @FeignClient(name = "ORDER-SERVICE", contextId = "cartClientService", path = "/order-service/api/carts")
 public interface CartClientService {
 	
 	@GetMapping
+	@Retry(name = "order-service")
 	public ResponseEntity<CartOrderServiceDtoCollectionResponse> findAll();
 	
 	@GetMapping("/{cartId}")
+	@Retry(name = "order-service")
 	public ResponseEntity<CartDto> findById(
 			@PathVariable("cartId") 
 			@NotBlank(message = "Input must not be blank!") 
 			@Valid final String cartId);
 	
 	@PostMapping
+	@Retry(name = "order-service")
 	public ResponseEntity<CartDto> save(
 			@RequestBody 
 			@NotNull(message = "Input must not be NULL!") 
 			@Valid final CartDto cartDto);
 	
 	@PutMapping
+	@Retry(name = "order-service")
 	public ResponseEntity<CartDto> update(
 			@RequestBody 
 			@NotNull(message = "Input must not be NULL!") 
 			@Valid final CartDto cartDto);
 	
 	@PutMapping("/{cartId}")
+	@Retry(name = "order-service")
 	public ResponseEntity<CartDto> update(
 			@PathVariable("cartId")
 			@NotBlank(message = "Input must not be blank!")
@@ -50,6 +57,7 @@ public interface CartClientService {
 			@Valid final CartDto cartDto);
 	
 	@DeleteMapping("/{cartId}")
+	@Retry(name = "order-service")
 	public ResponseEntity<Boolean> deleteById(@PathVariable("cartId") final String cartId);
 	
 }

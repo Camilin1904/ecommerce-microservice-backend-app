@@ -15,6 +15,21 @@ spring:
     - dev
 
 resilience4j:
+  retry:
+      instances:
+        user-service:
+          maxAttempts: 3
+          waitDuration: 1000ms
+          exponentialBackoffMultiplier: 2
+          retryExceptions:
+            - feign.FeignException
+            - java.net.ConnectException
+        order-service:
+          maxAttempts: 5
+          waitDuration: 500ms
+          exponentialBackoffMultiplier: 1.5
+          retryExceptions:
+            - feign.FeignException
   circuitbreaker:
     instances:
       proxyService:
@@ -27,6 +42,10 @@ resilience4j:
         sliding-window-size: 10
         wait-duration-in-open-state: 5s
         sliding-window-type: COUNT_BASED
+      user-service:
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000ms
+        slidingWindowSize: 10
 
 management:
   health:
