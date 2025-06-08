@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: shipping-service
-        image: ecommeceRegistry.azurecr.io/camilin19/shipping-service:latest
+        image: camilin19/shipping-service:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8600

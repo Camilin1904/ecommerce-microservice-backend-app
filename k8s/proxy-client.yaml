@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: proxy-client
-        image: ecommeceRegistry.azurecr.io/camilin19/proxy-client:latest
+        image: camilin19/proxy-client:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8900
