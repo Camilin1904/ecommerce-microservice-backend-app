@@ -66,7 +66,7 @@ steps:
     azureSubscriptionConnection: 'ecommerce-connection-manual'
     azureResourceGroup: 'rg-ecommerce-prod'
     kubernetesCluster: 'aks-ecommerce-prod'
-    manifests: '/k8s/e2e/e2e.yaml'
+    manifests: 'k8s/e2e/e2e.yaml'
 
 - task: Kubernetes@1
   inputs:
