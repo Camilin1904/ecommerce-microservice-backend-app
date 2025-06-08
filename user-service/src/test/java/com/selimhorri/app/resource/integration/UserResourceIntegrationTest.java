@@ -60,7 +60,7 @@ public class UserResourceIntegrationTest {
 
     @Test
     void testFindById() {
-        String url = "http://localhost:" + port + "/user-service/api/users/1";
+        String url = "http://localhost:" + port + "/user-service/api/users/10";
         UserDto response = restTemplate.getForObject(url, UserDto.class);
 
         assertNotNull(response, "Response should not be null");
@@ -74,13 +74,13 @@ public class UserResourceIntegrationTest {
 
     @Test
     void testDelete() {
-        String url = "http://localhost:" + port + "/user-service/api/users/2";
+        String url = "http://localhost:" + port + "/user-service/api/users/20";
         restTemplate.delete(url);
 
         // Verify that the user was deleted by checking collection
         DtoCollectionResponse<LinkedHashMap> response = restTemplate.getForObject("http://localhost:" + port + "/user-service/api/users", DtoCollectionResponse.class);
         assertNotNull(response, "Response should not be null");
-        assertFalse(response.getCollection().stream().anyMatch(user -> user.get("userId").equals(2)), "User should be deleted");
+        assertFalse(response.getCollection().stream().anyMatch(user -> user.get("userId").equals(20)), "User should be deleted");
     }
 
 }

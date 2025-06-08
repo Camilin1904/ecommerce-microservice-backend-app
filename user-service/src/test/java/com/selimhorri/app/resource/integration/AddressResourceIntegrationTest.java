@@ -56,7 +56,7 @@ public class AddressResourceIntegrationTest {
 
     @Test
     void testFindById() {
-        String url = "http://localhost:" + port + "/user-service/api/address/1";
+        String url = "http://localhost:" + port + "/user-service/api/address/10";
         AddressDto response = restTemplate.getForObject(url, AddressDto.class);
 
         assertNotNull(response, "Response should not be null");
@@ -73,7 +73,7 @@ public class AddressResourceIntegrationTest {
         addressDto.setFullAddress("123 Test Street");
         addressDto.setPostalCode("12345");
         addressDto.setCity("Test City");
-        addressDto.setUserDto(UserDto.builder().userId(1).build()); // Assuming userId is required for saving an address
+        addressDto.setUserDto(UserDto.builder().userId(10).build()); // Assuming userId is required for saving an address
 
         AddressDto response = restTemplate.postForObject(url, addressDto, AddressDto.class);
 
@@ -88,11 +88,11 @@ public class AddressResourceIntegrationTest {
     void testUpdate() {
         String url = "http://localhost:" + port + "/user-service/api/address";
         AddressDto addressDto = new AddressDto();
-        addressDto.setAddressId(1);
+        addressDto.setAddressId(10);
         addressDto.setFullAddress("456 Updated Street");
         addressDto.setPostalCode("54321");
         addressDto.setCity("Updated City");
-        addressDto.setUserDto(UserDto.builder().userId(1).build()); // Assuming userId is required for saving an address
+        addressDto.setUserDto(UserDto.builder().userId(10).build()); // Assuming userId is required for saving an address
 
 
         AddressDto response = restTemplate.exchange(url, HttpMethod.PUT, new HttpEntity<>(addressDto), AddressDto.class).getBody();
@@ -105,12 +105,12 @@ public class AddressResourceIntegrationTest {
 
     @Test
     void testDelete() {
-        String url = "http://localhost:" + port + "/user-service/api/address/2";
+        String url = "http://localhost:" + port + "/user-service/api/address/20";
         restTemplate.delete(url);
 
         // Verify that the address was deleted by checking collection
         DtoCollectionResponse<LinkedHashMap> response = restTemplate.getForObject("http://localhost:" + port + "/user-service/api/address", DtoCollectionResponse.class);
         assertNotNull(response, "Response should not be null");
-        assertFalse(response.getCollection().stream().anyMatch(address -> address.get("addressId").equals(2)), "Address should be deleted");
+        assertFalse(response.getCollection().stream().anyMatch(address -> address.get("addressId").equals(20)), "Address should be deleted");
     }
 }
