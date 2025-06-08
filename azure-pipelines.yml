@@ -18,6 +18,16 @@ steps:
     publishJUnitResults: true
     testResultsFiles: '**/surefire-reports/TEST-*.xml'
     goals: 'package'
+    
+
+- task: DockerCompose@1
+  inputs:
+    containerregistrytype: 'Container Registry'
+    dockerRegistryEndpoint: 'dockerHub'
+    dockerComposeFile: 'compose.yml'
+    projectName: 'ecommerce'
+    action: 'Build services'
+    includeLatestTag: true
 
 - task: DockerCompose@1
   inputs:
