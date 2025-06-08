@@ -69,6 +69,7 @@ jobs:
           kubernetesCluster: 'aks-ecommerce-stage'
           useClusterAdmin: true
           manifests: 'k8s/e2e/e2e.yaml'
+          rolloutStatusTimeout: '30'
 
       - task: Kubernetes@1
         inputs:
