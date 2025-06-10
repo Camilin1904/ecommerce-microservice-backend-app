@@ -118,7 +118,7 @@ jobs:
           collectionFileSource: 'e2e/collections'
           Contents: '**/Ecommerce_e2e_tests.postman_collection.json'
           environmentSourceType: 'none'
-          globalVars: 'base_url=http://$(getIP.output):8080'
+          globalVars: 'baseURL=http://$(getIP.output):8080'
 
 
       - task: KubernetesManifest@1
