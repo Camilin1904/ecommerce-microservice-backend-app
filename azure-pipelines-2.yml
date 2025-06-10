@@ -59,8 +59,12 @@ jobs:
           kubernetesCluster: 'aks-ecommerce-stage'
           useClusterAdmin: true
           manifests: 'k8s/*.yaml'
-          rolloutStatusTimeout: 30
-
+          rolloutStatusTimeout: 60
+          
+      - task: CmdLine@2
+        inputs:
+          script: 'sleep 30'
+          
       - task: KubernetesManifest@1
         inputs:
           action: 'deploy'
