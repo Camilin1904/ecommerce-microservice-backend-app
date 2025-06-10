@@ -96,7 +96,7 @@ jobs:
       #     dockerRegistryEndpoint: 'ecommerceRegistry'
           
     
-  
+    
 
       - task: Kubernetes@1
         name: getIP
@@ -107,7 +107,7 @@ jobs:
           kubernetesCluster: 'aks-ecommerce-stage'
           useClusterAdmin: true
           command: 'get'
-          arguments: 'service api-gateway -o jsonpath=''{.status.loadBalancer.ingress[0].ip}'''
+          arguments: 'service api-gateway -o jsonpath="{.status.loadBalancer.ingress[0].ip}"'
           secretType: 'dockerRegistry'
           containerRegistryType: 'Azure Container Registry'
 
