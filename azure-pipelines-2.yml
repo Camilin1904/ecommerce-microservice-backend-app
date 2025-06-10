@@ -118,10 +118,6 @@ jobs:
           collectionFileSource: 'e2e/collections'
           Contents: '**/Ecommerce_e2e_tests.postman_collection.json'
           environmentSourceType: 'none'
-          reporters: 'htmlextra'
-          htmlExtraDarkTheme: true
-          htmlExtraLogs: true
-          htmlExtraTestPaging: true
           globalVars: 'base_url=http://$(getIP.output):8080'
 
 
