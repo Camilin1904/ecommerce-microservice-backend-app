@@ -115,7 +115,7 @@ jobs:
         displayName: RunE2E
         inputs:
           collectionSourceType: 'file'
-          collectionFileSource: '/e2e/collections'
+          collectionFileSource: 'e2e/collections'
           Contents: '**/Ecommerce_e2e_tests.postman_collection.json'
           environmentSourceType: 'none'
           reporters: 'htmlextra'
