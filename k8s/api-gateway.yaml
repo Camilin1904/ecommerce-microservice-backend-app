@@ -1,10 +1,11 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: Service
 metadata:
   name: api-gateway
   labels:
     app: api-gateway
 spec:
+  type: LoadBalancer
   replicas: 1
   selector:
     matchLabels:
