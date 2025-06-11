@@ -126,7 +126,8 @@ jobs:
             echo "Waiting for $SERVICE_NAME external IP..."
             API_GATEWAY_IP=""
             for i in {1..30}; do # Try for up to 150 seconds (30 attempts * 5 seconds each)
-              CURRENT_IP=$(kubectl get service $SERVICE_NAME --namespace $NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+              CURRENT_IP=$(kubectl get service api-gateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')\
+              echo $CURRENT_IP
               if [ -n "$CURRENT_IP" ]; then
                 API_GATEWAY_IP="$CURRENT_IP"
                 echo "External IP found for $SERVICE_NAME: $API_GATEWAY_IP"
