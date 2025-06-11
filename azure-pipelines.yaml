@@ -9,9 +9,9 @@ jobs:
       - task: ManualValidation@1
         inputs:
           notifyUsers: |
-            cami.car.val@outlook.com
+            1105362068@u.icesi.edu.co
           approvers: |
-            cami.car.val@outlook.com
+            1105362068@u.icesi.edu.co
 
 
   - job: Deploy_to_prod
@@ -70,6 +70,10 @@ jobs:
           kubernetesCluster: 'aks-ecommerce-prod'
           useClusterAdmin: true
           manifests: 'k8s/*.yaml'
+      
+      - task: CmdLine@2
+        inputs:
+          script: 'sleep 30'
 
       - task: KubernetesManifest@1
         inputs:
@@ -80,7 +84,11 @@ jobs:
           kubernetesCluster: 'aks-ecommerce-prod'
           useClusterAdmin: true
           manifests: 'k8s/e2e/e2e.yaml'
-
+      
+      - task: CmdLine@2
+        inputs:
+          script: 'sleep 30'
+          
       - task: Kubernetes@1
         inputs:
           connectionType: 'Azure Resource Manager'
