@@ -107,7 +107,7 @@ jobs:
           kubernetesCluster: 'aks-ecommerce-stage'
           useClusterAdmin: true
           command: 'get'
-          arguments: 'service api-gateway '
+          arguments: 'service api-gateway -o jsonpath=.status.loadBalancer.ingress[0].ip'
           secretType: 'dockerRegistry'
           containerRegistryType: 'Azure Container Registry'
 
@@ -118,7 +118,7 @@ jobs:
           collectionFileSource: 'e2e/collections'
           Contents: '**/Ecommerce_e2e_tests.postman_collection.json'
           environmentSourceType: 'none'
-          globalVars: 'baseURL=http://$(getIP.KubectlOutput.status.loadBalancer.ingress[0].ip):8080'
+          globalVars: 'baseURL=http://$(getIP.KubectlOutput):8080'
 
 
       - task: KubernetesManifest@1
