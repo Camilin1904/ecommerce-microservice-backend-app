@@ -107,7 +107,7 @@ jobs:
           kubernetesCluster: 'aks-ecommerce-stage'
           useClusterAdmin: true
           command: 'get'
-          arguments: 'service api-gateway -o'
+          arguments: 'service api-gateway '
           secretType: 'dockerRegistry'
           containerRegistryType: 'Azure Container Registry'
 
