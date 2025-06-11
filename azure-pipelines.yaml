@@ -138,9 +138,7 @@ jobs:
           collectionFileSource: 'e2e/collections/Ecommerce_e2e_tests.postman_collection.json'
           environmentSourceType: 'none'
           globalVars: 'baseURL=http://$(API_GATEWAY_EXTERNAL_IP):8080'
-          reporters: 'htmlextra'
-          htmlExtraDarkTheme: true
-          htmlExtraLogs: true
+
 
       # - task: CmdLine@2
       #   inputs:
