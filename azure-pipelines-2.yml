@@ -95,63 +95,29 @@ jobs:
           containerRegistryType: 'Container Registry'
           dockerRegistryEndpoint: 'ecommerceRegistry'
           
-    
-    
 
-      - task: AzureCLI@2
-        displayName: 'Get AKS Credentials'
+      - task: KubernetesManifest@1
         inputs:
-          azureSubscription: 'ecommerce-connection-manual' 
-          scriptType: 'bash'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
-            AKS_CLUSTER_NAME="aks-ecommerce-stage"
-            AKS_RESOURCE_GROUP="rg-ecommerce-stage"
+          action: 'deploy'
+          connectionType: 'azureResourceManager'
+          azureSubscriptionConnection: 'ecommerce-connection-manual'
+          azureResourceGroup: 'rg-ecommerce-prod'
+          kubernetesCluster: 'aks-ecommerce-prod'
+          useClusterAdmin: true
+          manifests: 'k8s/e2e/e2e.yaml'
+        
 
-            az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME --overwrite-existing --admin
-            echo "kubectl context set to:"
-            kubectl config current-context
-
-      - task: AzureCLI@2 
-        displayName: 'Get API Gateway External IP'
+      - task: Kubernetes@1
         inputs:
-          azureSubscription: 'ecommerce-connection-manual' 
-          scriptType: 'bash'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
-            SERVICE_NAME="api-gateway" 
-            NAMESPACE="default"       
-
-
-            echo "Waiting for $SERVICE_NAME external IP..."
-            API_GATEWAY_IP=""
-            for i in {1..30}; do # Try for up to 150 seconds (30 attempts * 5 seconds each)
-              CURRENT_IP=$(kubectl get service api-gateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')\
-              echo $CURRENT_IP
-              if [ -n "$CURRENT_IP" ]; then
-                API_GATEWAY_IP="$CURRENT_IP"
-                echo "External IP found for $SERVICE_NAME: $API_GATEWAY_IP"
-                echo "##vso[task.setvariable variable=API_GATEWAY_EXTERNAL_IP]$API_GATEWAY_IP"
-                break
-              fi
-              echo "Attempt $i: External IP not yet assigned. Waiting 5 seconds..."
-              sleep 5
-            done
-
-            if [ -z "$API_GATEWAY_IP" ]; then
-              echo "##vso[task.logissue type=error]Failed to get external IP for $SERVICE_NAME within the timeout period."
-              exit 1 # Fail the pipeline if IP is not found
-            fi
-
-      - task: NewmanPostman@4 
-        displayName: RunE2E
-        inputs:
-          collectionSourceType: 'file'
-          collectionFileSource: 'e2e/collections'
-          Contents: '**/Ecommerce_e2e_tests.postman_collection.json'
-          environmentSourceType: 'none'
-          globalVars: 'baseURL=http://$(API_GATEWAY_EXTERNAL_IP):8080'
-
+          connectionType: 'Azure Resource Manager'
+          azureSubscriptionEndpoint: 'ecommerce-connection-manual'
+          azureResourceGroup: 'rg-ecommerce-prod'
+          useClusterAdmin: true
+          kubernetesCluster: 'aks-ecommerce-prod'
+          command: 'logs'
+          arguments: 'job/newman-job'
+          secretType: 'dockerRegistry'
+          containerRegistryType: 'Azure Container Registry' 
 
       - task: KubernetesManifest@1
         inputs:
