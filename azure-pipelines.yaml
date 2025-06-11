@@ -9,9 +9,9 @@ jobs:
       - task: ManualValidation@1
         inputs:
           notifyUsers: |
-            cami.car.val@outlook.com
+            1105362068@u.icesi.edu.co
           approvers: |
-            cami.car.val@outlook.com
+            1105362068@u.icesi.edu.co
 
 
   - job: Deploy_to_prod
