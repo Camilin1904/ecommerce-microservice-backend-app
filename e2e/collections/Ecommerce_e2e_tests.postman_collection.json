@@ -1467,11 +1467,6 @@
 			"type": "string"
 		},
 		{
-			"key": "baseURL",
-			"value": "http://api-gateway:8080",
-			"type": "string"
-		},
-		{
 			"key": "categoryId",
 			"value": "",
 			"type": "string"
