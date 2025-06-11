@@ -35,8 +35,7 @@ jobs:
         inputs:
           azureSubscription: 'ecommerce-connection-manual'
           mavenPomFile: 'pom.xml'
-          publishJUnitResults: true
-          testResultsFiles: '**/surefire-reports/TEST-*.xml'
+          publishJUnitResults: false
           codeCoverageToolOption: 'JaCoCo'
           javaHomeOption: 'JDKVersion'
           jdkVersionOption: '1.11'
