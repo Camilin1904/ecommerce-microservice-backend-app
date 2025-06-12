@@ -32,6 +32,7 @@ jobs:
             # Put one key=value per line, example:
             # sonar.exclusions=**/*.bin
             sonar.projectKey=CamilinPinguin_Ecommerce
+            sonar.organization=camilinpinguin
             sonar.projectName=Ecommerce
 
 
