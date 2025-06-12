@@ -35,7 +35,7 @@ jobs:
         inputs:
           azureSubscription: 'ecommerce-connection-manual'
           mavenPomFile: 'pom.xml'
-          options: '-X'
+          options: '-e'
           publishJUnitResults: false
           codeCoverageToolOption: 'JaCoCo'
           javaHomeOption: 'JDKVersion'
