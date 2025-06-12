@@ -15,10 +15,13 @@ jobs:
 
 
   - job: Deploy_to_prod
+    dependsOn: Validate
     pool:
       vmImage: ubuntu-latest
 
     steps:
+
+      
 
       - task: SonarQubePrepare@7
         inputs:
@@ -30,6 +33,10 @@ jobs:
             # sonar.exclusions=**/*.bin
             sonar.projectKey=CamilinPinguin_Ecommerce
             sonar.projectName=Ecommerce
+
+      - task: SonarQubeAnalyze@7
+        inputs:
+          jdkversion: 'JAVA_HOME_17_X64'
 
       - task: Maven@4
         inputs:
@@ -43,12 +50,10 @@ jobs:
           mavenVersionOption: 'Default'
           mavenAuthenticateFeed: false
           effectivePomSkip: false
-          #sonarQubeRunAnalysis: true
-          #sqMavenPluginVersionChoice: 'latest'
+          sonarQubeRunAnalysis: true
+          sqMavenPluginVersionChoice: 'latest'
       
-      - task: SonarQubeAnalyze@7
-        inputs:
-          jdkversion: 'JAVA_HOME_17_X64'
+      
       
       - task: SonarQubePublish@7
         inputs:
