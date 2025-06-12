@@ -43,8 +43,16 @@ jobs:
           mavenVersionOption: 'Default'
           mavenAuthenticateFeed: false
           effectivePomSkip: false
-          sonarQubeRunAnalysis: true
-          sqMavenPluginVersionChoice: 'latest'
+          #sonarQubeRunAnalysis: true
+          #sqMavenPluginVersionChoice: 'latest'
+      
+      - task: SonarQubeAnalyze@7
+        inputs:
+          jdkversion: 'JAVA_HOME_17_X64'
+      
+      - task: SonarQubePublish@7
+        inputs:
+          pollingTimeoutSec: '300'
 
 
       # - task: Docker@2
