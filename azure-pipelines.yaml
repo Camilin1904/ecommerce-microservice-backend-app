@@ -34,9 +34,6 @@ jobs:
             sonar.projectKey=CamilinPinguin_Ecommerce
             sonar.projectName=Ecommerce
 
-      - task: SonarQubeAnalyze@7
-        inputs:
-          jdkversion: 'JAVA_HOME_17_X64'
 
       - task: Maven@4
         inputs:
@@ -51,7 +48,7 @@ jobs:
           mavenAuthenticateFeed: false
           effectivePomSkip: false
           sonarQubeRunAnalysis: true
-          sqMavenPluginVersionChoice: 'latest'
+          #sqMavenPluginVersionChoice: 'latest'
       
       
       
