@@ -23,148 +23,152 @@ jobs:
 
       
 
-      - task: SonarQubePrepare@7
-        inputs:
-          SonarQube: 'sonarConnection'
-          scannerMode: 'other'
-          extraProperties: |
-            # Additional properties that will be passed to the scanner,
-            # Put one key=value per line, example:
-            # sonar.exclusions=**/*.bin
-            sonar.projectKey=CamilinPinguin_Ecommerce
-            sonar.organization=camilinpinguin
-            sonar.projectName=Ecommerce
+  #     - task: SonarQubePrepare@7
+  #       inputs:
+  #         SonarQube: 'sonarConnection'
+  #         scannerMode: 'other'
+  #         extraProperties: |
+  #           # Additional properties that will be passed to the scanner,
+  #           # Put one key=value per line, example:
+  #           # sonar.exclusions=**/*.bin
+  #           sonar.projectKey=CamilinPinguin_Ecommerce
+  #           sonar.organization=camilinpinguin
+  #           sonar.projectName=Ecommerce
 
 
-      - task: Maven@4
-        inputs:
-          azureSubscription: 'ecommerce-connection-manual'
-          mavenPomFile: 'pom.xml'
-          options: '-e'
-          publishJUnitResults: false
-          codeCoverageToolOption: 'JaCoCo'
-          javaHomeOption: 'JDKVersion'
-          jdkVersionOption: '1.11'
-          mavenVersionOption: 'Default'
-          mavenAuthenticateFeed: false
-          effectivePomSkip: false
-          sonarQubeRunAnalysis: true
-          #sqMavenPluginVersionChoice: 'latest'
+  #     - task: Maven@4
+  #       inputs:
+  #         azureSubscription: 'ecommerce-connection-manual'
+  #         mavenPomFile: 'pom.xml'
+  #         options: '-e'
+  #         publishJUnitResults: false
+  #         codeCoverageToolOption: 'JaCoCo'
+  #         javaHomeOption: 'JDKVersion'
+  #         jdkVersionOption: '1.11'
+  #         mavenVersionOption: 'Default'
+  #         mavenAuthenticateFeed: false
+  #         effectivePomSkip: false
+  #         sonarQubeRunAnalysis: true
+  #         #sqMavenPluginVersionChoice: 'latest'
       
       
       
-      - task: SonarQubePublish@7
-        inputs:
-          pollingTimeoutSec: '300'
+  #     - task: SonarQubePublish@7
+  #       inputs:
+  #         pollingTimeoutSec: '300'
 
-      - task: trivy@2
-        inputs:
-          method: 'docker'
-          version: 'latest'
-          type: 'filesystem'
-          target: '.'
-          scanners: 'misconfig, secret, vuln'
-          ignoreScanErrors: true
-
-
-      - task: Docker@2
-        inputs:
-          containerRegistry: 'dockerHub'
-          command: 'login'
+  #     - task: trivy@2
+  #       inputs:
+  #         method: 'docker'
+  #         version: 'latest'
+  #         type: 'filesystem'
+  #         target: '.'
+  #         scanners: 'misconfig, secret, vuln'
+  #         ignoreScanErrors: true
 
 
-      - task: DockerCompose@1
-        inputs:
-          containerregistrytype: 'Container Registry'
-          dockerRegistryEndpoint: 'dockerHub'
-          dockerComposeFile: 'compose.yml'
-          projectName: 'ecommerce'
-          action: 'Build services'
-          includeLatestTag: true
+  #     - task: Docker@2
+  #       inputs:
+  #         containerRegistry: 'dockerHub'
+  #         command: 'login'
 
-      - task: DockerCompose@1
-        inputs:
-          containerregistrytype: 'Container Registry'
-          dockerRegistryEndpoint: 'dockerHub'
-          dockerComposeFile: 'compose.yml'
-          projectName: 'ecommerce'
-          action: 'Push services'
-          includeLatestTag: true
+
+  #     - task: DockerCompose@1
+  #       inputs:
+  #         containerregistrytype: 'Container Registry'
+  #         dockerRegistryEndpoint: 'dockerHub'
+  #         dockerComposeFile: 'compose.yml'
+  #         projectName: 'ecommerce'
+  #         action: 'Build services'
+  #         includeLatestTag: true
+
+  #     - task: DockerCompose@1
+  #       inputs:
+  #         containerregistrytype: 'Container Registry'
+  #         dockerRegistryEndpoint: 'dockerHub'
+  #         dockerComposeFile: 'compose.yml'
+  #         projectName: 'ecommerce'
+  #         action: 'Push services'
+  #         includeLatestTag: true
 
           
-      - task: KubectlInstaller@0
-        inputs:
-          kubectlVersion: 'latest'
+  #     - task: KubectlInstaller@0
+  #       inputs:
+  #         kubectlVersion: 'latest'
 
-      - task: KubernetesManifest@1
-        inputs:
-          action: 'deploy'
-          connectionType: 'azureResourceManager'
-          azureSubscriptionConnection: 'ecommerce-connection-manual'
-          azureResourceGroup: 'rg-ecommerce-prod'
-          kubernetesCluster: 'aks-ecommerce-prod'
-          useClusterAdmin: true
-          manifests: 'k8s/*.yaml'
+  #     - task: KubernetesManifest@1
+  #       inputs:
+  #         action: 'deploy'
+  #         connectionType: 'azureResourceManager'
+  #         azureSubscriptionConnection: 'ecommerce-connection-manual'
+  #         azureResourceGroup: 'rg-ecommerce-prod'
+  #         kubernetesCluster: 'aks-ecommerce-prod'
+  #         useClusterAdmin: true
+  #         manifests: 'k8s/*.yaml'
       
-      - task: CmdLine@2
-        inputs:
-          script: 'sleep 30'
+  #     - task: CmdLine@2
+  #       inputs:
+  #         script: 'sleep 30'
 
-      - task: AzureCLI@2
-        displayName: 'Get AKS Credentials'
-        inputs:
-          azureSubscription: 'ecommerce-connection-manual' # Your Azure DevOps Service Connection to Azure
-          scriptType: 'bash'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
-            # Replace with your actual AKS cluster details
-            AKS_CLUSTER_NAME="aks-ecommerce-prod"
-            AKS_RESOURCE_GROUP="rg-ecommerce-prod"
+  #     - task: AzureCLI@2
+  #       displayName: 'Get AKS Credentials'
+  #       inputs:
+  #         azureSubscription: 'ecommerce-connection-manual' # Your Azure DevOps Service Connection to Azure
+  #         scriptType: 'bash'
+  #         scriptLocation: 'inlineScript'
+  #         inlineScript: |
+  #           # Replace with your actual AKS cluster details
+  #           AKS_CLUSTER_NAME="aks-ecommerce-prod"
+  #           AKS_RESOURCE_GROUP="rg-ecommerce-prod"
 
-            # Get credentials for kubectl
-            az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME --overwrite-existing --admin
-            echo "kubectl context set to:"
-            kubectl config current-context
+  #           # Get credentials for kubectl
+  #           az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME --overwrite-existing --admin
+  #           echo "kubectl context set to:"
+  #           kubectl config current-context
 
-      - task: AzureCLI@2 # Using AzureCLI again for kubectl command
-        displayName: 'Get API Gateway External IP'
-        inputs:
-          azureSubscription: 'ecommerce-connection-manual' # Use the same service connection for auth context
-          scriptType: 'bash'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
-            SERVICE_NAME="api-gateway" # The name of your Kubernetes Service
-            NAMESPACE="default"       # The namespace your service is in
+  #     - task: AzureCLI@2 # Using AzureCLI again for kubectl command
+  #       displayName: 'Get API Gateway External IP'
+  #       inputs:
+  #         azureSubscription: 'ecommerce-connection-manual' # Use the same service connection for auth context
+  #         scriptType: 'bash'
+  #         scriptLocation: 'inlineScript'
+  #         inlineScript: |
+  #           SERVICE_NAME="api-gateway" # The name of your Kubernetes Service
+  #           NAMESPACE="default"       # The namespace your service is in
 
-            # Loop until the external IP is assigned (LoadBalancer takes time)
-            echo "Waiting for $SERVICE_NAME external IP..."
-            API_GATEWAY_IP=""
-            for i in {1..30}; do # Try for up to 150 seconds (30 attempts * 5 seconds each)
-              CURRENT_IP=$(kubectl get service $SERVICE_NAME --namespace $NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-              if [ -n "$CURRENT_IP" ]; then
-                API_GATEWAY_IP="$CURRENT_IP"
-                echo "External IP found for $SERVICE_NAME: $API_GATEWAY_IP"
-                # Set this IP as a pipeline variable for subsequent steps
-                echo "##vso[task.setvariable variable=API_GATEWAY_EXTERNAL_IP]$API_GATEWAY_IP"
-                break
-              fi
-              echo "Attempt $i: External IP not yet assigned. Waiting 5 seconds..."
-              sleep 5
-            done
+  #           # Loop until the external IP is assigned (LoadBalancer takes time)
+  #           echo "Waiting for $SERVICE_NAME external IP..."
+  #           API_GATEWAY_IP=""
+  #           for i in {1..30}; do # Try for up to 150 seconds (30 attempts * 5 seconds each)
+  #             CURRENT_IP=$(kubectl get service $SERVICE_NAME --namespace $NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+  #             if [ -n "$CURRENT_IP" ]; then
+  #               API_GATEWAY_IP="$CURRENT_IP"
+  #               echo "External IP found for $SERVICE_NAME: $API_GATEWAY_IP"
+  #               # Set this IP as a pipeline variable for subsequent steps
+  #               echo "##vso[task.setvariable variable=API_GATEWAY_EXTERNAL_IP]$API_GATEWAY_IP"
+  #               break
+  #             fi
+  #             echo "Attempt $i: External IP not yet assigned. Waiting 5 seconds..."
+  #             sleep 5
+  #           done
 
-            if [ -z "$API_GATEWAY_IP" ]; then
-              echo "##vso[task.logissue type=error]Failed to get external IP for $SERVICE_NAME within the timeout period."
-              exit 1 # Fail the pipeline if IP is not found
-            fi
+  #           if [ -z "$API_GATEWAY_IP" ]; then
+  #             echo "##vso[task.logissue type=error]Failed to get external IP for $SERVICE_NAME within the timeout period."
+  #             exit 1 # Fail the pipeline if IP is not found
+  #           fi
 
 
-      - task: NewmanPostman@4
-        inputs:
-          collectionSourceType: 'file'
-          collectionFileSource: 'e2e/collections/Ecommerce_e2e_tests.postman_collection.json'
-          environmentSourceType: 'none'
-          globalVars: 'baseURL=http://$(API_GATEWAY_EXTERNAL_IP):8080'
-
+  #     - task: NewmanPostman@4
+  #       inputs:
+  #         collectionSourceType: 'file'
+  #         collectionFileSource: 'e2e/collections/Ecommerce_e2e_tests.postman_collection.json'
+  #         environmentSourceType: 'none'
+  #         globalVars: 'baseURL=http://$(API_GATEWAY_EXTERNAL_IP):8080'
+        - task: owaspzap@1
+          inputs:
+            scantype: 'targetedScan'
+            url: 'http://$(API_GATEWAY_EXTERNAL_IP)'
+            port: '8080'
 
   
 
