@@ -164,13 +164,61 @@ jobs:
   #         collectionFileSource: 'e2e/collections/Ecommerce_e2e_tests.postman_collection.json'
   #         environmentSourceType: 'none'
   #         globalVars: 'baseURL=http://$(API_GATEWAY_EXTERNAL_IP):8080'
-        - task: owaspzap@1
-          inputs:
-            scantype: 'targetedScan'
-            url: 'http://$(API_GATEWAY_EXTERNAL_IP)'
-            port: '8080'
-
+        
   
+      - task: CmdLine@2
+        inputs:
+          script: |
+            ZAP_VERSION="2.14.0" # Specify the ZAP version you want
 
+            ZAP_DOWNLOAD_URL="https://github.com/zaproxy/zaproxy/releases/download/v${ZAP_VERSION}/ZAP_${ZAP_VERSION}_Linux.tar.gz"
+            
+            ZAP_INSTALL_DIR="/opt/zap" 
+            REPORT_PATH="/tmp/OWASP-ZAP-Report.html" 
+            
+
+            TARGET_URL="http://$(API_GATEWAY_EXTERNAL_IP):8080" 
+            
+            # --- Script Execution ---
+            
+            sudo mkdir -p "${ZAP_INSTALL_DIR}"
+            sudo chown $(whoami):$(whoami) "${ZAP_INSTALL_DIR}" 
+            cd "${ZAP_INSTALL_DIR}"
+            
+
+            echo "Downloading ZAP from: ${ZAP_DOWNLOAD_URL}"
+            wget "${ZAP_DOWNLOAD_URL}" -O "ZAP_${ZAP_VERSION}_Linux.tar.gz"
+            if [ $? -ne 0 ]; then
+                echo "Error: Failed to download ZAP."
+                exit 1
+            fi
+
+            echo "Extracting ZAP..."
+            tar -xvf "ZAP_${ZAP_VERSION}_Linux.tar.gz" --strip-components=1
+            if [ $? -ne 0 ]; then
+                echo "Error: Failed to extract ZAP."
+                exit 1
+            fi
+            
+            chmod +x "${ZAP_INSTALL_DIR}/zap.sh"
+            
+            echo "ZAP installed successfully at ${ZAP_INSTALL_DIR}"
+            
+            echo "--- 2. Running ZAP Quick Scan on ${TARGET_URL} ---"
+
+            "${ZAP_INSTALL_DIR}/zap.sh" -cmd -quickurl "${TARGET_URL}" -quickout "${REPORT_PATH}" -quickformat html
+            if [ $? -ne 0 ]; then
+                echo "Warning: ZAP scan might have encountered issues or found alerts. Check the report."
+            fi
+            
+            echo "--- 3. ZAP Scan Complete ---"
+            echo "Report generated at: ${REPORT_PATH}"
+            echo "You can view the HTML report by opening ${REPORT_PATH} in a web browser."
+            
+            # Optional: Display a snippet of the report or a success message
+            if [ -f "${REPORT_PATH}" ]; then
+                echo "First 20 lines of the report:"
+                head -n 20 "${REPORT_PATH}"
+            fi
 
 
