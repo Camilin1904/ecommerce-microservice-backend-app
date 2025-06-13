@@ -23,39 +23,48 @@ jobs:
 
       
 
-      - task: SonarQubePrepare@7
-        inputs:
-          SonarQube: 'sonarConnection'
-          scannerMode: 'other'
-          extraProperties: |
-            # Additional properties that will be passed to the scanner,
-            # Put one key=value per line, example:
-            # sonar.exclusions=**/*.bin
-            sonar.projectKey=CamilinPinguin_Ecommerce
-            sonar.organization=camilinpinguin
-            sonar.projectName=Ecommerce
+      # - task: SonarQubePrepare@7
+      #   inputs:
+      #     SonarQube: 'sonarConnection'
+      #     scannerMode: 'other'
+      #     extraProperties: |
+      #       # Additional properties that will be passed to the scanner,
+      #       # Put one key=value per line, example:
+      #       # sonar.exclusions=**/*.bin
+      #       sonar.projectKey=CamilinPinguin_Ecommerce
+      #       sonar.organization=camilinpinguin
+      #       sonar.projectName=Ecommerce
 
 
-      - task: Maven@4
+      # - task: Maven@4
+      #   inputs:
+      #     azureSubscription: 'ecommerce-connection-manual'
+      #     mavenPomFile: 'pom.xml'
+      #     options: '-e'
+      #     publishJUnitResults: false
+      #     codeCoverageToolOption: 'JaCoCo'
+      #     javaHomeOption: 'JDKVersion'
+      #     jdkVersionOption: '1.11'
+      #     mavenVersionOption: 'Default'
+      #     mavenAuthenticateFeed: false
+      #     effectivePomSkip: false
+      #     sonarQubeRunAnalysis: true
+      #     #sqMavenPluginVersionChoice: 'latest'
+      
+      
+      
+      # - task: SonarQubePublish@7
+      #   inputs:
+      #     pollingTimeoutSec: '300'
+
+      - task: trivy@2
         inputs:
-          azureSubscription: 'ecommerce-connection-manual'
-          mavenPomFile: 'pom.xml'
-          options: '-e'
-          publishJUnitResults: false
-          codeCoverageToolOption: 'JaCoCo'
-          javaHomeOption: 'JDKVersion'
-          jdkVersionOption: '1.11'
-          mavenVersionOption: 'Default'
-          mavenAuthenticateFeed: false
-          effectivePomSkip: false
-          sonarQubeRunAnalysis: true
-          #sqMavenPluginVersionChoice: 'latest'
-      
-      
-      
-      - task: SonarQubePublish@7
-        inputs:
-          pollingTimeoutSec: '300'
+          method: 'docker'
+          version: 'latest'
+          type: 'filesystem'
+          target: '.'
+          scanners: 'misconfig, secret, vuln'
+          ignoreScanErrors: true
 
 
       # - task: Docker@2
