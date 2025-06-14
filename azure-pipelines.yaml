@@ -228,4 +228,5 @@ jobs:
         - script: |
             npx semantic-release
           displayName: 'Run Semantic Release'
+          continueOnError: true
 
