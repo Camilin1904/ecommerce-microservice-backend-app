@@ -4,19 +4,7 @@ trigger:
 
 jobs:
 
-  - job: Validate
-    pool: server
-    steps:
-      - task: ManualValidation@1
-        inputs:
-          notifyUsers: |
-            1105362068@u.icesi.edu.co
-          approvers: |
-            1105362068@u.icesi.edu.co
-
-
   - job: Run_Unit_Tests
-    dependsOn: Validate
     pool:
       vmImage: ubuntu-latest
 
@@ -25,6 +13,7 @@ jobs:
       - checkout: self
         fetchDepth: 0
 
+  
 
       - task: Maven@4
         inputs:
@@ -37,7 +26,7 @@ jobs:
           jdkVersionOption: '1.11'
           mavenVersionOption: 'Default'
           mavenAuthenticateFeed: false
-          effectivePomSkip: false    
+          effectivePomSkip: false
       
       - task: Docker@2
         inputs:
@@ -143,31 +132,19 @@ jobs:
               exit 1 # Fail the pipeline if IP is not found
             fi
 
-      - task: Npm@1
-        inputs:
-          command: 'custom'
-          customCommand: 'install newman newman-reporter-htmlextra -g'
-        displayName: 'Install Newman and htmlextra reporter'
-
-
       - task: NewmanPostman@4
         displayName: 'Run Postman E2E Tests'
         inputs:
           collectionSourceType: 'file'
           collectionFileSource: 'e2e/collections/Ecommerce_e2e_tests.postman_collection.json'
           environmentSourceType: 'none'
-          reporters: 'htmlextra'
-          htmlExtraDarkTheme: true  
-          htmlExtraLogs: true
-          htmlExtraTestPaging: true
           globalVars: 'baseURL=http://$(API_GATEWAY_EXTERNAL_IP):8080'
       
       - task: UsePythonVersion@0
-          inputs:
-            versionSpec: '3.x'
-            addToPath: true
-          displayName: 'Use Python 3.x'
-        displayName: 'Set up Python 3.x'
+        inputs:
+          versionSpec: '3.x'
+          addToPath: true
+        displayName: 'Use Python 3.x'
 
 
       - script: |
