@@ -217,10 +217,17 @@ jobs:
         inputs:
           helmVersionToInstall: 'latest'
 
-      - script: |
-          echo "Creating ingress-nginx namespace..."
-          kubectl create namespace ingress-nginx --dry-run=client -o yaml | kubectl apply -f -
-        displayName: 'Create ingress-nginx Namespace'
+      - task: Kubernetes@1
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscriptionEndpoint: 'ecommerce-connection-manual'
+          azureResourceGroup: 'rg-ecommerce-prod'
+          kubernetesCluster: 'aks-ecommerce-prod'
+          command: 'create'
+          useClusterAdmin: true
+          arguments: 'namespace ingress-nginx --dry-run=client -o yaml'
+          secretType: 'dockerRegistry'
+          containerRegistryType: 'Azure Container Registry'
 
       - script: |
           echo "Adding ingress-nginx Helm repo..."
