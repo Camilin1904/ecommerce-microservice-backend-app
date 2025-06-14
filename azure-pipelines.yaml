@@ -2,7 +2,7 @@ trigger:
 - master
 
 variables:
-  -group: 'github_vars'
+  - group: 'github_vars'
 
 jobs:
 
@@ -69,13 +69,7 @@ jobs:
           target: '.'
           scanners: 'misconfig, secret, vuln'
           ignoreScanErrors: true
-
-  - job: Deploy_to_prod
-    pool:
-      vmImage: 'ubuntu-latest'
-    dependsOn: Run_Unit_Tests
-    steps:
-
+      
       - task: Docker@2
         inputs:
           containerRegistry: 'dockerHub'
@@ -100,6 +94,14 @@ jobs:
           action: 'Push services'
           includeLatestTag: true
 
+
+  - job: Deploy_to_prod
+    pool:
+      vmImage: 'ubuntu-latest'
+    dependsOn: Run_Unit_Tests
+    steps:
+
+      
           
       - task: KubectlInstaller@0
         inputs:
@@ -214,9 +216,9 @@ jobs:
           fetchDepth: 0
 
         - task: NodeTool@0
-          displayName: 'Use Node.js 18.x'
+          displayName: 'Use Node.js 20.x'
           inputs:
-            versionSpec: '18.x' 
+            versionSpec: '20.x' 
 
         - script: |
             npm ci
