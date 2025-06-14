@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Locust Python cache and virtual environment
+locust/__pycache__/
+locust/venv/
