@@ -132,23 +132,12 @@ jobs:
               exit 1 # Fail the pipeline if IP is not found
             fi
 
-      - task: Npm@1
-        inputs:
-          command: 'custom'
-          customCommand: 'install newman newman-reporter-htmlextra -g'
-        displayName: 'Install Newman and htmlextra reporter'
-
-
       - task: NewmanPostman@4
         displayName: 'Run Postman E2E Tests'
         inputs:
           collectionSourceType: 'file'
           collectionFileSource: 'e2e/collections/Ecommerce_e2e_tests.postman_collection.json'
           environmentSourceType: 'none'
-          reporters: 'htmlextra'
-          htmlExtraDarkTheme: true  
-          htmlExtraLogs: true
-          htmlExtraTestPaging: true
           globalVars: 'baseURL=http://$(API_GATEWAY_EXTERNAL_IP):8080'
       
       - task: UsePythonVersion@0
