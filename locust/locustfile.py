@@ -1,4 +1,5 @@
 from locust import HttpUser, task, between
+import os
 
 class MyUser(HttpUser):
     wait_time = between(1, 5)  # Wait time between tasks
