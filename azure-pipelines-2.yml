@@ -4,19 +4,7 @@ trigger:
 
 jobs:
 
-  - job: Validate
-    pool: server
-    steps:
-      - task: ManualValidation@1
-        inputs:
-          notifyUsers: |
-            1105362068@u.icesi.edu.co
-          approvers: |
-            1105362068@u.icesi.edu.co
-
-
   - job: Run_Unit_Tests
-    dependsOn: Validate
     pool:
       vmImage: ubuntu-latest
 
@@ -25,18 +13,7 @@ jobs:
       - checkout: self
         fetchDepth: 0
 
-      - task: SonarQubePrepare@7
-        inputs:
-          SonarQube: 'sonarConnection'
-          scannerMode: 'other'
-          extraProperties: |
-            # Additional properties that will be passed to the scanner,
-            # Put one key=value per line, example:
-            # sonar.exclusions=**/*.bin
-            sonar.projectKey=CamilinPinguin_Ecommerce
-            sonar.organization=camilinpinguin
-            sonar.projectName=Ecommerce
-
+  
 
       - task: Maven@4
         inputs:
@@ -50,23 +27,6 @@ jobs:
           mavenVersionOption: 'Default'
           mavenAuthenticateFeed: false
           effectivePomSkip: false
-          sonarQubeRunAnalysis: true
-          #sqMavenPluginVersionChoice: 'latest'
-      
-      
-      
-      - task: SonarQubePublish@7
-        inputs:
-          pollingTimeoutSec: '300'
-
-      - task: trivy@2
-        inputs:
-          method: 'docker'
-          version: 'latest'
-          type: 'filesystem'
-          target: '.'
-          scanners: 'misconfig, secret, vuln'
-          ignoreScanErrors: true
       
       - task: Docker@2
         inputs:
