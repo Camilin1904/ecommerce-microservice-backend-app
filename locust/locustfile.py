@@ -2,12 +2,12 @@ from locust import HttpUser, task, between
 import random
 import string
 from datetime import datetime
+import os
 
 class MyUser(HttpUser):
     wait_time = between(1, 3)  # Wait time between tasks
 
-    host = "http://localhost:8080"  # Base URL for the tests
-
+    host = os.getenv("LOCUST_HOST", "http://api-gateway:8080/")
 
     @task
     def createUser(self):
