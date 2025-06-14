@@ -2,7 +2,7 @@ trigger:
 - master
 
 variables:
-  -group: 'github_vars'
+  - group: 'github_vars'
 
 jobs:
 
