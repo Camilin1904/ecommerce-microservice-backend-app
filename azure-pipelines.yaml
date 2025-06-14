@@ -216,6 +216,9 @@ jobs:
         displayName: 'Install Helm'
         inputs:
           helmVersionToInstall: 'latest'
+      - task: KubectlInstaller@0
+        inputs:
+          kubectlVersion: 'latest'
 
       - task: Kubernetes@1
         inputs:
