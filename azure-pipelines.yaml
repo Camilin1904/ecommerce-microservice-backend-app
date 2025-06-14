@@ -216,9 +216,9 @@ jobs:
           fetchDepth: 0
 
         - task: NodeTool@0
-          displayName: 'Use Node.js 18.x'
+          displayName: 'Use Node.js 20.x'
           inputs:
-            versionSpec: '18.x' 
+            versionSpec: '20.x' 
 
         - script: |
             npm ci
