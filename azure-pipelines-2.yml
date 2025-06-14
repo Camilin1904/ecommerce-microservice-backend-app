@@ -155,7 +155,7 @@ jobs:
 
           cd locust
 
-          python3 -m locust -f locustfile.py --headless -u 200 -r 10 -t 30s --csv=load_test_report
+          python3 -m locust -f locustfile.py --headless -u 200 -r 10 -t 30s --csv=load_test_report --html=load_test_report.html
         displayName: 'Run Locust Load Tests'
 
 
