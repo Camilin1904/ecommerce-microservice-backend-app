@@ -228,25 +228,22 @@ jobs:
           kubernetesCluster: 'aks-ecommerce-prod'
           command: 'create'
           useClusterAdmin: true
-          arguments: 'namespace ingress-nginx --dry-run=client -o yaml'
+          arguments: 'namespace nginx --dry-run=client -o yaml'
           secretType: 'dockerRegistry'
           containerRegistryType: 'Azure Container Registry'
+      
+      - task: KubernetesManifest@1
+        inputs:
+          action: 'deploy'
+          connectionType: 'azureResourceManager'
+          azureSubscriptionConnection: 'ecommerce-connection-manual'
+          azureResourceGroup: 'rg-ecommerce-prod'
+          kubernetesCluster: 'aks-ecommerce-prod'
+          useClusterAdmin: true
+          namespace: 'nginx'
+          manifests: 'k8s/nginx/nginx.yaml'
 
-      - script: |
-          echo "Adding ingress-nginx Helm repo..."
-          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-          helm repo update
-        displayName: 'Add NGINX Helm Repo'
-
-      - script: |
-          echo "Installing NGINX Ingress Controller..."
-          helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
-            --namespace ingress-nginx \
-            --create-namespace \
-            --set controller.service.type=LoadBalancer \
-            --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"=/healthz \
-            --wait # Wait for the deployment to complete
-        displayName: 'Install NGINX Ingress Controller'
+      
 
       # Get the external IP of the NGINX Ingress Controller LoadBalancer
       - task: AzureCLI@2
@@ -259,7 +256,7 @@ jobs:
             echo "Waiting for NGINX LoadBalancer external IP..."
             NGINX_EXTERNAL_IP=""
             for i in {1..60}; do # Try for up to 5 minutes (60 * 5s)
-              CURRENT_IP=$(kubectl get service ingress-nginx-controller -n ingress-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+              CURRENT_IP=$(kubectl get service nginxr -n nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
               if [ -n "$CURRENT_IP" ]; then
                 NGINX_EXTERNAL_IP="$CURRENT_IP"
                 echo "NGINX External IP found: $NGINX_EXTERNAL_IP"
