@@ -192,11 +192,10 @@ jobs:
           globalVars: 'baseURL=http://$(API_GATEWAY_EXTERNAL_IP):8080'
       
       - task: UsePythonVersion@0
-          inputs:
-            versionSpec: '3.x'
-            addToPath: true
-          displayName: 'Use Python 3.x'
-        displayName: 'Set up Python 3.x'
+        inputs:
+          versionSpec: '3.x'
+          addToPath: true
+        displayName: 'Use Python 3.x'
 
 
       - script: |
