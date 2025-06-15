@@ -19,17 +19,19 @@ resilience4j:
       instances:
         user-service:
           maxAttempts: 3
-          waitDuration: 1000ms
+          waitDuration: 10000ms
           exponentialBackoffMultiplier: 2
           retryExceptions:
             - feign.FeignException
             - java.net.ConnectException
-        order-service:
-          maxAttempts: 5
-          waitDuration: 500ms
-          exponentialBackoffMultiplier: 1.5
-          retryExceptions:
-            - feign.FeignException
+            - java.net.SocketTimeoutException
+            - org.springframework.web.client.ResourceAccessException
+            - org.springframework.web.client.HttpServerErrorException
+            - org.springframework.web.client.HttpClientErrorException
+          ignoreExceptions:
+            - java.lang.IllegalArgumentException
+            - feign.FeignException$NotFound
+            - feign.FeignException$BadRequest
   circuitbreaker:
     instances:
       proxyService:
@@ -42,7 +44,7 @@ resilience4j:
         sliding-window-size: 10
         wait-duration-in-open-state: 5s
         sliding-window-type: COUNT_BASED
-      user-service:
+      order-service:
         failureRateThreshold: 50
         waitDurationInOpenState: 10000ms
         slidingWindowSize: 10
@@ -67,9 +69,8 @@ ribbon:
     enabled: true
   NIWSServerListClassName: com.netflix.niws.loadbalancer.DiscoveryEnabledNIWSServerList
 
-
-
-
-
-
-
+logging:
+  level:
+    root: INFO
+    io.github.resilience4j.retry: DEBUG
+    com.selimhorri.app: DEBUG
