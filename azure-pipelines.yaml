@@ -1,6 +1,9 @@
 trigger:
 - master
 
+variables:
+  - group: 'github_vars'
+
 jobs:
 
   - job: Validate
@@ -14,48 +17,49 @@ jobs:
             1105362068@u.icesi.edu.co
 
 
-  - job: Deploy_to_prod
+  - job: Run_Unit_Tests
     dependsOn: Validate
     pool:
       vmImage: ubuntu-latest
 
     steps:
 
-      
+      - checkout: self
+        fetchDepth: 0
 
-      # - task: SonarQubePrepare@7
-      #   inputs:
-      #     SonarQube: 'sonarConnection'
-      #     scannerMode: 'other'
-      #     extraProperties: |
-      #       # Additional properties that will be passed to the scanner,
-      #       # Put one key=value per line, example:
-      #       # sonar.exclusions=**/*.bin
-      #       sonar.projectKey=CamilinPinguin_Ecommerce
-      #       sonar.organization=camilinpinguin
-      #       sonar.projectName=Ecommerce
+      - task: SonarQubePrepare@7
+        inputs:
+          SonarQube: 'sonarConnection'
+          scannerMode: 'other'
+          extraProperties: |
+            # Additional properties that will be passed to the scanner,
+            # Put one key=value per line, example:
+            # sonar.exclusions=**/*.bin
+            sonar.projectKey=CamilinPinguin_Ecommerce
+            sonar.organization=camilinpinguin
+            sonar.projectName=Ecommerce
 
 
-      # - task: Maven@4
-      #   inputs:
-      #     azureSubscription: 'ecommerce-connection-manual'
-      #     mavenPomFile: 'pom.xml'
-      #     options: '-e'
-      #     publishJUnitResults: false
-      #     codeCoverageToolOption: 'JaCoCo'
-      #     javaHomeOption: 'JDKVersion'
-      #     jdkVersionOption: '1.11'
-      #     mavenVersionOption: 'Default'
-      #     mavenAuthenticateFeed: false
-      #     effectivePomSkip: false
-      #     sonarQubeRunAnalysis: true
-      #     #sqMavenPluginVersionChoice: 'latest'
+      - task: Maven@4
+        inputs:
+          azureSubscription: 'ecommerce-connection-manual'
+          mavenPomFile: 'pom.xml'
+          options: '-e'
+          publishJUnitResults: false
+          codeCoverageToolOption: 'JaCoCo'
+          javaHomeOption: 'JDKVersion'
+          jdkVersionOption: '1.11'
+          mavenVersionOption: 'Default'
+          mavenAuthenticateFeed: false
+          effectivePomSkip: false
+          sonarQubeRunAnalysis: true
+          #sqMavenPluginVersionChoice: 'latest'
       
       
       
-      # - task: SonarQubePublish@7
-      #   inputs:
-      #     pollingTimeoutSec: '300'
+      - task: SonarQubePublish@7
+        inputs:
+          pollingTimeoutSec: '300'
 
       - task: trivy@2
         inputs:
@@ -65,108 +69,324 @@ jobs:
           target: '.'
           scanners: 'misconfig, secret, vuln'
           ignoreScanErrors: true
-
-
-      # - task: Docker@2
-      #   inputs:
-      #     containerRegistry: 'dockerHub'
-      #     command: 'login'
-
-
-      # - task: DockerCompose@1
-      #   inputs:
-      #     containerregistrytype: 'Container Registry'
-      #     dockerRegistryEndpoint: 'dockerHub'
-      #     dockerComposeFile: 'compose.yml'
-      #     projectName: 'ecommerce'
-      #     action: 'Build services'
-      #     includeLatestTag: true
-
-      # - task: DockerCompose@1
-      #   inputs:
-      #     containerregistrytype: 'Container Registry'
-      #     dockerRegistryEndpoint: 'dockerHub'
-      #     dockerComposeFile: 'compose.yml'
-      #     projectName: 'ecommerce'
-      #     action: 'Push services'
-      #     includeLatestTag: true
-
-          
-      # - task: KubectlInstaller@0
-      #   inputs:
-      #     kubectlVersion: 'latest'
-
-      # - task: KubernetesManifest@1
-      #   inputs:
-      #     action: 'deploy'
-      #     connectionType: 'azureResourceManager'
-      #     azureSubscriptionConnection: 'ecommerce-connection-manual'
-      #     azureResourceGroup: 'rg-ecommerce-prod'
-      #     kubernetesCluster: 'aks-ecommerce-prod'
-      #     useClusterAdmin: true
-      #     manifests: 'k8s/*.yaml'
       
-      # - task: CmdLine@2
-      #   inputs:
-      #     script: 'sleep 30'
-
-      # - task: AzureCLI@2
-      #   displayName: 'Get AKS Credentials'
-      #   inputs:
-      #     azureSubscription: 'ecommerce-connection-manual' # Your Azure DevOps Service Connection to Azure
-      #     scriptType: 'bash'
-      #     scriptLocation: 'inlineScript'
-      #     inlineScript: |
-      #       # Replace with your actual AKS cluster details
-      #       AKS_CLUSTER_NAME="aks-ecommerce-prod"
-      #       AKS_RESOURCE_GROUP="rg-ecommerce-prod"
-
-      #       # Get credentials for kubectl
-      #       az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME --overwrite-existing --admin
-      #       echo "kubectl context set to:"
-      #       kubectl config current-context
-
-      # - task: AzureCLI@2 # Using AzureCLI again for kubectl command
-      #   displayName: 'Get API Gateway External IP'
-      #   inputs:
-      #     azureSubscription: 'ecommerce-connection-manual' # Use the same service connection for auth context
-      #     scriptType: 'bash'
-      #     scriptLocation: 'inlineScript'
-      #     inlineScript: |
-      #       SERVICE_NAME="api-gateway" # The name of your Kubernetes Service
-      #       NAMESPACE="default"       # The namespace your service is in
-
-      #       # Loop until the external IP is assigned (LoadBalancer takes time)
-      #       echo "Waiting for $SERVICE_NAME external IP..."
-      #       API_GATEWAY_IP=""
-      #       for i in {1..30}; do # Try for up to 150 seconds (30 attempts * 5 seconds each)
-      #         CURRENT_IP=$(kubectl get service $SERVICE_NAME --namespace $NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-      #         if [ -n "$CURRENT_IP" ]; then
-      #           API_GATEWAY_IP="$CURRENT_IP"
-      #           echo "External IP found for $SERVICE_NAME: $API_GATEWAY_IP"
-      #           # Set this IP as a pipeline variable for subsequent steps
-      #           echo "##vso[task.setvariable variable=API_GATEWAY_EXTERNAL_IP]$API_GATEWAY_IP"
-      #           break
-      #         fi
-      #         echo "Attempt $i: External IP not yet assigned. Waiting 5 seconds..."
-      #         sleep 5
-      #       done
-
-      #       if [ -z "$API_GATEWAY_IP" ]; then
-      #         echo "##vso[task.logissue type=error]Failed to get external IP for $SERVICE_NAME within the timeout period."
-      #         exit 1 # Fail the pipeline if IP is not found
-      #       fi
+      - task: Docker@2
+        inputs:
+          containerRegistry: 'dockerHub'
+          command: 'login'
 
 
-      # - task: NewmanPostman@4
-      #   inputs:
-      #     collectionSourceType: 'file'
-      #     collectionFileSource: 'e2e/collections/Ecommerce_e2e_tests.postman_collection.json'
-      #     environmentSourceType: 'none'
-      #     globalVars: 'baseURL=http://$(API_GATEWAY_EXTERNAL_IP):8080'
+      - task: DockerCompose@1
+        inputs:
+          containerregistrytype: 'Container Registry'
+          dockerRegistryEndpoint: 'dockerHub'
+          dockerComposeFile: 'compose.yml'
+          projectName: 'ecommerce'
+          action: 'Build services'
+          includeLatestTag: true
+
+      - task: DockerCompose@1
+        inputs:
+          containerregistrytype: 'Container Registry'
+          dockerRegistryEndpoint: 'dockerHub'
+          dockerComposeFile: 'compose.yml'
+          projectName: 'ecommerce'
+          action: 'Push services'
+          includeLatestTag: true
 
 
+  - job: Deploy_to_prod
+    pool:
+      vmImage: 'ubuntu-latest'
+    dependsOn: Run_Unit_Tests
+    steps:
+
+      
+          
+      - task: KubectlInstaller@0
+        inputs:
+          kubectlVersion: 'latest'
+
+      - task: KubernetesManifest@1
+        inputs:
+          action: 'deploy'
+          connectionType: 'azureResourceManager'
+          azureSubscriptionConnection: 'ecommerce-connection-manual'
+          azureResourceGroup: 'rg-ecommerce-prod'
+          kubernetesCluster: 'aks-ecommerce-prod'
+          useClusterAdmin: true
+          manifests: 'k8s/*.yaml'
+      
+      - task: CmdLine@2
+        inputs:
+          script: 'sleep 30'
+
+  - job: Run_E2E_Tests
+    pool:
+      vmImage: 'ubuntu-latest'
+    dependsOn: Deploy_to_prod
+    steps:
+
+      - task: AzureCLI@2
+        displayName: 'Get AKS Credentials'
+        inputs:
+          azureSubscription: 'ecommerce-connection-manual' # Your Azure DevOps Service Connection to Azure
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            # Replace with your actual AKS cluster details
+            AKS_CLUSTER_NAME="aks-ecommerce-prod"
+            AKS_RESOURCE_GROUP="rg-ecommerce-prod"
+
+            # Get credentials for kubectl
+            az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME --overwrite-existing --admin
+            echo "kubectl context set to:"
+            kubectl config current-context
+
+      - task: AzureCLI@2 # Using AzureCLI again for kubectl command
+        displayName: 'Get API Gateway External IP'
+        inputs:
+          azureSubscription: 'ecommerce-connection-manual' # Use the same service connection for auth context
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            SERVICE_NAME="api-gateway" # The name of your Kubernetes Service
+            NAMESPACE="default"       # The namespace your service is in
+
+            # Loop until the external IP is assigned (LoadBalancer takes time)
+            echo "Waiting for $SERVICE_NAME external IP..."
+            API_GATEWAY_IP=""
+            for i in {1..30}; do # Try for up to 150 seconds (30 attempts * 5 seconds each)
+              CURRENT_IP=$(kubectl get service $SERVICE_NAME --namespace $NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+              if [ -n "$CURRENT_IP" ]; then
+                API_GATEWAY_IP="$CURRENT_IP"
+                echo "External IP found for $SERVICE_NAME: $API_GATEWAY_IP"
+                # Set this IP as a pipeline variable for subsequent steps
+                echo "##vso[task.setvariable variable=API_GATEWAY_EXTERNAL_IP]$API_GATEWAY_IP"
+                break
+              fi
+              echo "Attempt $i: External IP not yet assigned. Waiting 5 seconds..."
+              sleep 5
+            done
+
+            if [ -z "$API_GATEWAY_IP" ]; then
+              echo "##vso[task.logissue type=error]Failed to get external IP for $SERVICE_NAME within the timeout period."
+              exit 1 # Fail the pipeline if IP is not found
+            fi
+
+
+      - task: NewmanPostman@4
+        inputs:
+          collectionSourceType: 'file'
+          collectionFileSource: 'e2e/collections/Ecommerce_e2e_tests.postman_collection.json'
+          environmentSourceType: 'none'
+          globalVars: 'baseURL=http://$(API_GATEWAY_EXTERNAL_IP):8080'
+        
   
+      - script: |
+          echo "Creating ZAP working directory..."
+          mkdir -p $(System.DefaultWorkingDirectory)/owaspzap
+          echo "Setting permissions for ZAP working directory..."
+          sudo chmod -R 777 $(System.DefaultWorkingDirectory)/owaspzap
+          echo "Pulling ZAP Docker image..."
+          docker pull ghcr.io/zaproxy/zaproxy:stable
+          echo "Running ZAP baseline scan against http://$(API_GATEWAY_EXTERNAL_IP):8080..."
+          docker run --rm \
+            -v $(System.DefaultWorkingDirectory)/owaspzap:/zap/wrk/:rw \
+            ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+            -t http://$(API_GATEWAY_EXTERNAL_IP):8080/user-service/api/users \
+            -J report.json -r report.html
+          echo "ZAP scan finished. Reports are in $(System.DefaultWorkingDirectory)/owaspzap"
+        displayName: 'Run OWASP ZAP Baseline Scan'
+
+      - task: PublishBuildArtifacts@1
+        inputs:
+          PathtoPublish: '$(System.DefaultWorkingDirectory)/owaspzap'
+          ArtifactName: 'ZAPScanResults'
+        displayName: 'Publish ZAP Scan Results'
+        condition: succeededOrFailed()
+
+  - job: DeployNginx
+    displayName: 'Install NGINX Ingress'
+    dependsOn: Run_E2E_Tests
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - task: HelmInstaller@1
+        displayName: 'Install Helm'
+        inputs:
+          helmVersionToInstall: 'latest'
+      - task: KubectlInstaller@0
+        inputs:
+          kubectlVersion: 'latest'
+
+      - task: Kubernetes@1
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscriptionEndpoint: 'ecommerce-connection-manual'
+          azureResourceGroup: 'rg-ecommerce-prod'
+          kubernetesCluster: 'aks-ecommerce-prod'
+          command: 'create'
+          useClusterAdmin: true
+          arguments: 'namespace ingress-nginx --dry-run=client -o yaml'
+          secretType: 'dockerRegistry'
+          containerRegistryType: 'Azure Container Registry'
+
+      - script: |
+          echo "Adding ingress-nginx Helm repo..."
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm repo update
+        displayName: 'Add NGINX Helm Repo'
+
+      - script: |
+          echo "Installing NGINX Ingress Controller..."
+          helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+            --namespace ingress-nginx \
+            --create-namespace \
+            --set controller.service.type=LoadBalancer \
+            --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"=/healthz \
+            --wait # Wait for the deployment to complete
+        displayName: 'Install NGINX Ingress Controller'
+
+      # Get the external IP of the NGINX Ingress Controller LoadBalancer
+      - task: AzureCLI@2
+        displayName: 'Get NGINX External IP'
+        inputs:
+          azureSubscription: 'ecommerce-connection-manual'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            echo "Waiting for NGINX LoadBalancer external IP..."
+            NGINX_EXTERNAL_IP=""
+            for i in {1..60}; do # Try for up to 5 minutes (60 * 5s)
+              CURRENT_IP=$(kubectl get service ingress-nginx-controller -n ingress-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+              if [ -n "$CURRENT_IP" ]; then
+                NGINX_EXTERNAL_IP="$CURRENT_IP"
+                echo "NGINX External IP found: $NGINX_EXTERNAL_IP"
+                # Set as a pipeline output variable
+                echo "##vso[task.setvariable variable=NGINX_EXTERNAL_IP;isOutput=true]$NGINX_EXTERNAL_IP"
+                break
+              fi
+              echo "Attempt $i: IP not yet assigned. Waiting 5 seconds..."
+              sleep 5
+            done
+
+            if [ -z "$NGINX_EXTERNAL_IP" ]; then
+              echo "##vso[task.logissue type=error]Failed to get NGINX external IP within timeout."
+              exit 1
+            fi
+        name: getNginxIp # Give this task a name to reference its output
+
+  - job: DeployMonitoring
+    displayName: 'Install Prometheus and Grafana'
+    dependsOn: DeployNginx
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    variables:
+      NGINX_EXTERNAL_IP: $(DeployNginx.getNginxIp.NGINX_EXTERNAL_IP)
+
+    steps:
+      - task: HelmInstaller@1
+        displayName: 'Install Helm'
+        inputs:
+          helmVersionToInstall: 'latest'
+
+      - script: |
+          echo "Creating monitoring namespace..."
+          kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
+        displayName: 'Create monitoring Namespace'
+
+      - script: |
+          echo "Adding Prometheus and Grafana Helm repos..."
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo update
+        displayName: 'Add Helm Repos'
+
+      - script: |
+          echo "Installing kube-prometheus-stack..."
+          helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+            --namespace monitoring \
+            --create-namespace \
+            --set grafana.enabled=true \
+            --set grafana.ingress.enabled=true \
+            --set grafana.ingress.hosts[0]="grafana.$(NGINX_EXTERNAL_IP).nip.io" \
+            --set grafana.ingress.ingressClassName="nginx" \
+            --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false \
+            --set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false \
+            --set prometheus.prometheusSpec.probeSelectorNilUsesHelmValues=false \
+            --wait # Wait for the deployment to complete
+        displayName: 'Install Prometheus-Grafana Stack'
+  
+  - job: GetGrafanaCreds
+    displayName: 'Get Grafana Dashboard Details'
+    dependsOn: DeployMonitoring
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    variables:
+      NGINX_EXTERNAL_IP: $(DeployNginx.getNginxIp.NGINX_EXTERNAL_IP)
+
+    steps:
+      - script: |
+          echo "Grafana Dashboard URL will be: http://grafana.$(NGINX_EXTERNAL_IP).nip.io"
+          echo "Make sure this IP is assigned to your NGINX Load Balancer."
+        displayName: 'Display Grafana URL Hint'
+
+      # Get Grafana Admin Password
+      - task: AzureCLI@2
+        displayName: 'Get Grafana Admin Password'
+        inputs:
+          azureSubscription: 'ecommerce-connection-manual'
+          scriptType: 'bash'
+          scriptLocation: 'inlineScript'
+          inlineScript: |
+            echo "Fetching Grafana admin password..."
+            GRAFANA_PASSWORD=$(kubectl get secret prometheus-grafana -n monitoring -o jsonpath="{.data.admin-password}" | base64 --decode)
+            echo "##vso[task.setvariable variable=GRAFANA_PASSWORD;isSecret=true]$GRAFANA_PASSWORD"
+            echo "Grafana Username: admin"
+            echo "Grafana Password: (See pipeline logs for password - it's marked as secret)"
+            echo "##vso[task.logissue type=warning;message=Grafana Admin Password: $GRAFANA_PASSWORD]" # Log password as a warning for visibility in pipeline summary
+        name: getGrafanaPass # Name for output variable reference
+
+      # Optional: Verify Grafana dashboard is reachable
+      - script: |
+          GRAFANA_URL="http://grafana.$(NGINX_EXTERNAL_IP).nip.io"
+          echo "Attempting to reach Grafana dashboard at: $GRAFANA_URL"
+          curl -s -o /dev/null -w "%{http_code}" "$GRAFANA_URL"
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$GRAFANA_URL")
+          echo "Grafana HTTP Status Code: $HTTP_CODE"
+          if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 302 ]; then # 302 for redirect to login
+            echo "Grafana dashboard is reachable!"
+          else
+            echo "##vso[task.logissue type=error]Grafana dashboard not reachable. Status: $HTTP_CODE"
+            exit 1
+          fi
+        displayName: 'Verify Grafana Dashboard Reachability'
+        condition: and(succeeded(), ne(variables.NGINX_EXTERNAL_IP, ''))
 
 
+  - job: Semantic_Release
+    pool:
+      vmImage: 'ubuntu-latest'
+    dependsOn: GetGrafanaCreds
+    steps:
 
+        - checkout: self
+          fetchDepth: 0
+
+        - task: NodeTool@0
+          displayName: 'Use Node.js 20.x'
+          inputs:
+            versionSpec: '20.x' 
+
+        - script: |
+            npm ci
+          displayName: 'Install Dependencies'
+
+
+        - script: |
+            npx semantic-release
+          displayName: 'Run Semantic Release'
+          continueOnError: true

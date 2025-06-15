@@ -1,0 +1,17 @@
+{
+  "name": "ecommerce-microservice-backend-app",
+  "version": "1.0.0",
+  "description": "## Important Note: This project's new milestone is to move The whole system to work on Kubernetes, so stay tuned.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.3",
+    "semantic-release": "^24.2.5"
+  }
+}

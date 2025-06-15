@@ -146,6 +146,15 @@ services:
     networks:
       - ecommerce-net
 
+  stress-dashboard:
+    image: camilin19/stress-dashboard:latest
+    build:
+      context: ./locust
+    ports:
+      - 8085:8085
+    networks:
+      - ecommerce-net
+
 networks:
   ecommerce-net:
     driver: bridge

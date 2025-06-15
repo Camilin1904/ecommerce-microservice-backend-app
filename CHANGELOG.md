@@ -1,0 +1,48 @@
+# 1.0.0 (2025-06-14)
+
+
+### Bug Fixes
+
+* add a space ([a46c27e](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/a46c27e89101e4bcce639ef000c90bfe276fb348))
+* add credential to pipeline ([c31a6c8](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/c31a6c8bb67fbfc158c9f17c5f8e7076aeeb33c1))
+* add new zap run ([20137da](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/20137daba1ffb6ae654e6b9d11177c1b625f8fd5))
+* add sonar organization ([d8b5a6f](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/d8b5a6f61a1c49aa3907c57add8bf61d23b70563))
+* add wait time between kubernetes commands ([56ae03f](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/56ae03f549399b4106c8a7371118892592606884))
+* change node version ([0ee9917](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/0ee9917742a8c85a24a5076b93f3004e2dd4348f))
+* changed the list of aprovers ([7b74692](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/7b74692830f4492f450501f22bda75139d110ed6))
+* commented line ([6baaf6f](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/6baaf6f18610a339e239dd5ad3fbf899f807da29))
+* docker tasks moved to building job ([cd2d9e0](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/cd2d9e0502a32e786a15cdc8c5a531976c560883))
+* fixed wrong dir on compose for newman ([26b3640](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/26b3640b5387d386559ce67d2fe3c76ce5fbcba5))
+* I dont even know any more ([d47d13f](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/d47d13f005b78ec4e54c1cf6138939d9e27e8895))
+* move jenkins yamls to subfolder ([01fe74f](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/01fe74fbf3344b10fb093b9e4ad6d2925c8a3063))
+* newman ([206dbc7](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/206dbc71cb26e931cb22ef3ca63947c3df272cb2))
+* newman ([e0fb911](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/e0fb911a468e98ac8d4920f86e9bb0680a040ef5))
+* pipeline now, hopefully finds all manifests ([0fb5f6e](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/0fb5f6eed4da9242febc4220c124f939280f0490))
+* re fix the validation email ([59be85c](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/59be85c58575d32be214a56a9f26c3ccf99bfdc6))
+* remove unused github wokflows ([b90f20f](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/b90f20fe8a6d56b7ad9cce2675f02dbc725e1670))
+* remove unused namespace from kustomization file, fix docker image name for proxy client ([68e4e59](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/68e4e59200936cc9854d47619d8520f89332d936))
+* remove wrong type from pai gateway yaml ([827c584](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/827c584a2c1410b9e864763213954201e5783c2b))
+* removed a slash° ([28ef005](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/28ef00530d04f777142be3125f09f54b2bdb1133))
+* separate analisys from build steps, plausible conflict of java versions ([dc629c9](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/dc629c98360be5502985d7da31dfbee42d816199))
+* switch from deprecated extension ([d344800](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/d34480054cba789a68317ee52ce938a8f58e63e4))
+* try to fix sonarqube ([0adb724](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/0adb724ddd6f245084fc86e764f1ef077df406d5))
+* turn api-gateway into a load balancer ([ed39652](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/ed39652f4ac966d8f77e40436242b9d2a6ab2881))
+* turned prod pipeline into a yaml pipeline to allow manual validatioon ([bec333e](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/bec333e622a481880c583fcc146eda2b77ac5600))
+* uncomment everything, pipeline done ([ce11de1](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/ce11de12e0bae5203d4d78a5d951425dde702c62))
+* update azure pipeline ([ae241a7](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/ae241a7235dcd7c56624f83127925283d0865f81))
+* update url for zap ([2e42b54](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/2e42b548f0d1a486b5bc6866832f568f5de0caf4))
+* went back to docker hub ([6e8e1f6](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/6e8e1f654016357f00b418ef727c00051f70c33f))
+
+
+### Features
+
+* add automatic semantic versioning ([f13f3ba](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/f13f3baa6311cbca4f3a612d1fedbfb8e3efe9c2))
+* add e2e dockerfile and added it to the general compose ([30d4260](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/30d42607f3659ff1b4a87d3a289db98c7533985f))
+* add e2e yaml ([9f56cec](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/9f56ceca11393b41aa61ba3cdd9bb2f583881a50))
+* add sonarqube analisys ([365e299](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/365e299a0d03f34ae90a2c540f8f6d60c1ecfa56))
+* add tests that work :) ([dcca716](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/dcca716e5135e33114da4a4b6eae7db186add79c))
+* add trivy analysis ([c267576](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/c267576158d603c418a4b040a06ec79aea328ffd))
+* add zap scan, commented everything else to test ([595f58a](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/595f58af2c3187ef464fd58c11d17e26856ce67e))
+* change e2e tests to run outside of kubernetes component ([029bb44](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/029bb44f2b0b1922dab2e8b7ba340bb6734fbcbf))
+* change the images from my docker hub to an ACR for easier access from azure ([d110f02](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/d110f02e68b582cc8b559c3e3150a3e5698fe8f0))
+* configure dev pipeline, to be pass to branch later ([d8be7f9](https://github.com/Camilin1904/ecommerce-microservice-backend-app/commit/d8be7f9551c777d3b7953ff53e756a5087b9511d))
