@@ -180,12 +180,6 @@ stages:
                 exit 1 # Fail the pipeline if IP is not found
               fi
 
-
-        - task: CmdLine@2
-          inputs:
-            script: 'npm install newman-reporter-html'
-          
-
         - task: NewmanPostman@4
           inputs:
             collectionSourceType: 'file'
@@ -194,14 +188,6 @@ stages:
             reporters: html
             globalVars: 'baseURL=http://$(API_GATEWAY_EXTERNAL_IP):8080'
         
-
-        - task: PublishBuildArtifacts@1
-          inputs:
-            PathtoPublish: '$(System.DefaultWorkingDirectory)/newman'
-            ArtifactName: 'NewmanE2EReport'
-          displayName: 'Publish Newman E2E Report'
-          condition: succeededOrFailed()
-    
         - script: |
             echo "Creating ZAP working directory..."
             mkdir -p $(System.DefaultWorkingDirectory)/owaspzap
