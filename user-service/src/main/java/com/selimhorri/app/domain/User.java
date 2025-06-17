@@ -10,6 +10,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
@@ -58,6 +59,7 @@ public final class User extends AbstractMappedEntity implements Serializable {
 	private Set<Address> addresses;
 	
 	@OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "user")
+	@JoinColumn(name = "credential_id", nullable = false, updatable = false)
 	private Credential credential;
 	
 }

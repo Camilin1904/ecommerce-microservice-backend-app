@@ -1,265 +1,268 @@
 trigger:
 - master
 
+pr: none
+
 variables:
   - group: 'github_vars'
 
-jobs:
+stages:
 
-  - job: Validate
-    pool: server
-    steps:
-      - task: ManualValidation@1
-        inputs:
-          notifyUsers: |
-            1105362068@u.icesi.edu.co
-          approvers: |
-            1105362068@u.icesi.edu.co
+- stage: Run_Prod
 
+  jobs:
 
-  - job: Run_Unit_Tests
-    dependsOn: Validate
-    pool:
-      vmImage: ubuntu-latest
-
-    steps:
-
-      - checkout: self
-        fetchDepth: 0
-
-      - task: SonarQubePrepare@7
-        inputs:
-          SonarQube: 'sonarConnection'
-          scannerMode: 'other'
-          extraProperties: |
-            # Additional properties that will be passed to the scanner,
-            # Put one key=value per line, example:
-            # sonar.exclusions=**/*.bin
-            sonar.projectKey=CamilinPinguin_Ecommerce
-            sonar.organization=camilinpinguin
-            sonar.projectName=Ecommerce
+    - job: Validate
+      pool: server
+      steps:
+        - task: ManualValidation@1
+          inputs:
+            notifyUsers: |
+              1105362068@u.icesi.edu.co
+            approvers: |
+              1105362068@u.icesi.edu.co
 
 
-      - task: Maven@4
-        inputs:
-          azureSubscription: 'ecommerce-connection-manual'
-          mavenPomFile: 'pom.xml'
-          options: '-e'
-          publishJUnitResults: false
-          codeCoverageToolOption: 'JaCoCo'
-          javaHomeOption: 'JDKVersion'
-          jdkVersionOption: '1.11'
-          mavenVersionOption: 'Default'
-          mavenAuthenticateFeed: false
-          effectivePomSkip: false
-          sonarQubeRunAnalysis: true
-          #sqMavenPluginVersionChoice: 'latest'
-      
-      
-      
-      - task: SonarQubePublish@7
-        inputs:
-          pollingTimeoutSec: '300'
+    - job: Run_Unit_Tests
+      dependsOn: Validate
+      pool:
+        vmImage: ubuntu-latest
 
-      - task: trivy@2
-        inputs:
-          method: 'docker'
-          version: 'latest'
-          type: 'filesystem'
-          target: '.'
-          scanners: 'misconfig, secret, vuln'
-          ignoreScanErrors: true
-      
-      - task: Docker@2
-        inputs:
-          containerRegistry: 'dockerHub'
-          command: 'login'
-
-
-      - task: DockerCompose@1
-        inputs:
-          containerregistrytype: 'Container Registry'
-          dockerRegistryEndpoint: 'dockerHub'
-          dockerComposeFile: 'compose.yml'
-          projectName: 'ecommerce'
-          action: 'Build services'
-          includeLatestTag: true
-
-      - task: DockerCompose@1
-        inputs:
-          containerregistrytype: 'Container Registry'
-          dockerRegistryEndpoint: 'dockerHub'
-          dockerComposeFile: 'compose.yml'
-          projectName: 'ecommerce'
-          action: 'Push services'
-          includeLatestTag: true
-
-
-  - job: Deploy_to_prod
-    pool:
-      vmImage: 'ubuntu-latest'
-    dependsOn: Run_Unit_Tests
-    steps:
-
-      
-          
-      - task: KubectlInstaller@0
-        inputs:
-          kubectlVersion: 'latest'
-
-      - task: KubernetesManifest@1
-        inputs:
-          action: 'deploy'
-          connectionType: 'azureResourceManager'
-          azureSubscriptionConnection: 'ecommerce-connection-manual'
-          azureResourceGroup: 'rg-ecommerce-prod'
-          kubernetesCluster: 'aks-ecommerce-prod'
-          useClusterAdmin: true
-          manifests: 'k8s/*.yaml'
-      
-      - task: CmdLine@2
-        inputs:
-          script: 'sleep 30'
-
-  - job: Run_E2E_Tests
-    pool:
-      vmImage: 'ubuntu-latest'
-    dependsOn: Deploy_to_prod
-    steps:
-
-      - task: AzureCLI@2
-        displayName: 'Get AKS Credentials'
-        inputs:
-          azureSubscription: 'ecommerce-connection-manual' # Your Azure DevOps Service Connection to Azure
-          scriptType: 'bash'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
-            # Replace with your actual AKS cluster details
-            AKS_CLUSTER_NAME="aks-ecommerce-prod"
-            AKS_RESOURCE_GROUP="rg-ecommerce-prod"
-
-            # Get credentials for kubectl
-            az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME --overwrite-existing --admin
-            echo "kubectl context set to:"
-            kubectl config current-context
-
-      - task: AzureCLI@2 # Using AzureCLI again for kubectl command
-        displayName: 'Get API Gateway External IP'
-        inputs:
-          azureSubscription: 'ecommerce-connection-manual' # Use the same service connection for auth context
-          scriptType: 'bash'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
-            SERVICE_NAME="api-gateway" # The name of your Kubernetes Service
-            NAMESPACE="default"       # The namespace your service is in
-
-            # Loop until the external IP is assigned (LoadBalancer takes time)
-            echo "Waiting for $SERVICE_NAME external IP..."
-            API_GATEWAY_IP=""
-            for i in {1..30}; do # Try for up to 150 seconds (30 attempts * 5 seconds each)
-              CURRENT_IP=$(kubectl get service $SERVICE_NAME --namespace $NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-              if [ -n "$CURRENT_IP" ]; then
-                API_GATEWAY_IP="$CURRENT_IP"
-                echo "External IP found for $SERVICE_NAME: $API_GATEWAY_IP"
-                # Set this IP as a pipeline variable for subsequent steps
-                echo "##vso[task.setvariable variable=API_GATEWAY_EXTERNAL_IP]$API_GATEWAY_IP"
-                break
-              fi
-              echo "Attempt $i: External IP not yet assigned. Waiting 5 seconds..."
-              sleep 5
-            done
-
-            if [ -z "$API_GATEWAY_IP" ]; then
-              echo "##vso[task.logissue type=error]Failed to get external IP for $SERVICE_NAME within the timeout period."
-              exit 1 # Fail the pipeline if IP is not found
-            fi
-
-
-      - task: NewmanPostman@4
-        inputs:
-          collectionSourceType: 'file'
-          collectionFileSource: 'e2e/collections/Ecommerce_e2e_tests.postman_collection.json'
-          environmentSourceType: 'none'
-          globalVars: 'baseURL=http://$(API_GATEWAY_EXTERNAL_IP):8080'
-        
-  
-      - script: |
-          echo "Creating ZAP working directory..."
-          mkdir -p $(System.DefaultWorkingDirectory)/owaspzap
-          echo "Setting permissions for ZAP working directory..."
-          sudo chmod -R 777 $(System.DefaultWorkingDirectory)/owaspzap
-          echo "Pulling ZAP Docker image..."
-          docker pull ghcr.io/zaproxy/zaproxy:stable
-          echo "Running ZAP baseline scan against http://$(API_GATEWAY_EXTERNAL_IP):8080..."
-          docker run --rm \
-            -v $(System.DefaultWorkingDirectory)/owaspzap:/zap/wrk/:rw \
-            ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
-            -t http://$(API_GATEWAY_EXTERNAL_IP):8080/user-service/api/users \
-            -J report.json -r report.html
-          echo "ZAP scan finished. Reports are in $(System.DefaultWorkingDirectory)/owaspzap"
-        displayName: 'Run OWASP ZAP Baseline Scan'
-
-      - task: PublishBuildArtifacts@1
-        inputs:
-          PathtoPublish: '$(System.DefaultWorkingDirectory)/owaspzap'
-          ArtifactName: 'ZAPScanResults'
-        displayName: 'Publish ZAP Scan Results'
-        condition: succeededOrFailed()
-
-        
-      - task: PublishBuildArtifacts@1
-        inputs:
-          PathtoPublish: '$(System.DefaultWorkingDirectory)/owaspzap'
-          ArtifactName: 'ZAPScanResults'
-        displayName: 'Publish ZAP Scan Results'
-        condition: succeededOrFailed()
-    
-      - task: DownloadSecureFile@1
-        name: grafanaDeployScriptFile
-        displayName: 'Download .grafana script'
-        inputs:
-          secureFile: 'grafana.sh'
-      - script: |
-          chmod +x $(grafanaDeployScriptFile.secureFilePath)
-
-      - task: AzureCLI@2
-        inputs:
-          azureSubscription: $(azureSubscription)
-          scriptType: 'bash'
-          scriptLocation: 'inlineScript'
-          inlineScript: |
-            az aks get-credentials --resource-group rg-ecommerce-prod --name aks-ecommerce-prod --file $(Agent.TempDirectory)/kubeconfig --overwrite-existing
-            echo "Kubeconfig stored at $(Agent.TempDirectory)/kubeconfig"
-        displayName: 'Get AKS Credentials'
-
-      - task: Bash@3
-        displayName: 'Execute .grafana script'
-        inputs:
-          filePath: $(grafanaDeployScriptFile.secureFilePath)
-        env:
-          KUBECONFIG: $(Agent.TempDirectory)/kubeconfig
-
-  - job: Semantic_Release
-    pool:
-      vmImage: 'ubuntu-latest'
-    dependsOn: Run_E2E_Tests
-    steps:
+      steps:
 
         - checkout: self
           fetchDepth: 0
 
-        - task: NodeTool@0
-          displayName: 'Use Node.js 20.x'
+        - task: SonarQubePrepare@7
           inputs:
-            versionSpec: '20.x' 
+            SonarQube: 'sonarConnection'
+            scannerMode: 'other'
+            extraProperties: |
+              # Additional properties that will be passed to the scanner,
+              # Put one key=value per line, example:
+              # sonar.exclusions=**/*.bin
+              sonar.projectKey=CamilinPinguin_Ecommerce
+              sonar.organization=camilinpinguin
+              sonar.projectName=Ecommerce
 
+
+        - task: Maven@4
+          inputs:
+            azureSubscription: 'ecommerce-connection-manual'
+            mavenPomFile: 'pom.xml'
+            options: '-e'
+            publishJUnitResults: false
+            codeCoverageToolOption: 'JaCoCo'
+            javaHomeOption: 'JDKVersion'
+            jdkVersionOption: '1.11'
+            mavenVersionOption: 'Default'
+            mavenAuthenticateFeed: false
+            effectivePomSkip: false
+            sonarQubeRunAnalysis: true
+            #sqMavenPluginVersionChoice: 'latest'
+        
+        
+        
+        - task: SonarQubePublish@7
+          inputs:
+            pollingTimeoutSec: '300'
+
+        - task: trivy@2
+          inputs:
+            method: 'docker'
+            version: 'latest'
+            type: 'filesystem'
+            target: '.'
+            scanners: 'misconfig, secret, vuln'
+            ignoreScanErrors: true
+        
+        - task: Docker@2
+          inputs:
+            containerRegistry: 'dockerHub'
+            command: 'login'
+
+
+        - task: DockerCompose@1
+          inputs:
+            containerregistrytype: 'Container Registry'
+            dockerRegistryEndpoint: 'dockerHub'
+            dockerComposeFile: 'compose.yml'
+            projectName: 'ecommerce'
+            action: 'Build services'
+            includeLatestTag: true
+
+        - task: DockerCompose@1
+          inputs:
+            containerregistrytype: 'Container Registry'
+            dockerRegistryEndpoint: 'dockerHub'
+            dockerComposeFile: 'compose.yml'
+            projectName: 'ecommerce'
+            action: 'Push services'
+            includeLatestTag: true
+
+
+    - job: Deploy_to_prod
+      pool:
+        vmImage: 'ubuntu-latest'
+      dependsOn: Run_Unit_Tests
+      steps:
+
+        
+            
+        - task: KubectlInstaller@0
+          inputs:
+            kubectlVersion: 'latest'
+
+        - task: KubernetesManifest@1
+          inputs:
+            action: 'deploy'
+            connectionType: 'azureResourceManager'
+            azureSubscriptionConnection: 'ecommerce-connection-manual'
+            azureResourceGroup: 'rg-ecommerce-prod'
+            kubernetesCluster: 'aks-ecommerce-prod'
+            useClusterAdmin: true
+            manifests: 'k8s/*.yaml'
+        
+        - task: CmdLine@2
+          inputs:
+            script: 'sleep 30'
+
+    - job: Run_E2E_Tests
+      pool:
+        vmImage: 'ubuntu-latest'
+      dependsOn: Deploy_to_prod
+      steps:
+
+        - task: AzureCLI@2
+          displayName: 'Get AKS Credentials'
+          inputs:
+            azureSubscription: 'ecommerce-connection-manual' # Your Azure DevOps Service Connection to Azure
+            scriptType: 'bash'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              # Replace with your actual AKS cluster details
+              AKS_CLUSTER_NAME="aks-ecommerce-prod"
+              AKS_RESOURCE_GROUP="rg-ecommerce-prod"
+
+              # Get credentials for kubectl
+              az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME --overwrite-existing --admin
+              echo "kubectl context set to:"
+              kubectl config current-context
+
+        - task: AzureCLI@2 # Using AzureCLI again for kubectl command
+          displayName: 'Get API Gateway External IP'
+          inputs:
+            azureSubscription: 'ecommerce-connection-manual' # Use the same service connection for auth context
+            scriptType: 'bash'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              SERVICE_NAME="api-gateway" # The name of your Kubernetes Service
+              NAMESPACE="default"       # The namespace your service is in
+
+              # Loop until the external IP is assigned (LoadBalancer takes time)
+              echo "Waiting for $SERVICE_NAME external IP..."
+              API_GATEWAY_IP=""
+              for i in {1..30}; do # Try for up to 150 seconds (30 attempts * 5 seconds each)
+                CURRENT_IP=$(kubectl get service $SERVICE_NAME --namespace $NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+                if [ -n "$CURRENT_IP" ]; then
+                  API_GATEWAY_IP="$CURRENT_IP"
+                  echo "External IP found for $SERVICE_NAME: $API_GATEWAY_IP"
+                  # Set this IP as a pipeline variable for subsequent steps
+                  echo "##vso[task.setvariable variable=API_GATEWAY_EXTERNAL_IP]$API_GATEWAY_IP"
+                  break
+                fi
+                echo "Attempt $i: External IP not yet assigned. Waiting 5 seconds..."
+                sleep 5
+              done
+
+              if [ -z "$API_GATEWAY_IP" ]; then
+                echo "##vso[task.logissue type=error]Failed to get external IP for $SERVICE_NAME within the timeout period."
+                exit 1 # Fail the pipeline if IP is not found
+              fi
+
+        - task: NewmanPostman@4
+          inputs:
+            collectionSourceType: 'file'
+            collectionFileSource: 'e2e/collections/Ecommerce_e2e_tests.postman_collection.json'
+            environmentSourceType: 'none'
+            globalVars: 'baseURL=http://$(API_GATEWAY_EXTERNAL_IP):8080'
+        
         - script: |
-            npm ci
-          displayName: 'Install Dependencies'
+            echo "Creating ZAP working directory..."
+            mkdir -p $(System.DefaultWorkingDirectory)/owaspzap
+            echo "Setting permissions for ZAP working directory..."
+            sudo chmod -R 777 $(System.DefaultWorkingDirectory)/owaspzap
+            echo "Pulling ZAP Docker image..."
+            docker pull ghcr.io/zaproxy/zaproxy:stable
+            echo "Running ZAP baseline scan against http://$(API_GATEWAY_EXTERNAL_IP):8080..."
+            docker run --rm \
+              -v $(System.DefaultWorkingDirectory)/owaspzap:/zap/wrk/:rw \
+              ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+              -t http://$(API_GATEWAY_EXTERNAL_IP):8080/user-service/api/users \
+              -J report.json -r report.html
+            echo "ZAP scan finished. Reports are in $(System.DefaultWorkingDirectory)/owaspzap"
+          displayName: 'Run OWASP ZAP Baseline Scan'
 
+        - task: PublishBuildArtifacts@1
+          inputs:
+            PathtoPublish: '$(System.DefaultWorkingDirectory)/owaspzap'
+            ArtifactName: 'ZAPScanResults'
+          displayName: 'Publish ZAP Scan Results'
+          condition: succeededOrFailed()
 
+        
+        - task: PublishBuildArtifacts@1
+          inputs:
+            PathtoPublish: '$(System.DefaultWorkingDirectory)/owaspzap'
+            ArtifactName: 'ZAPScanResults'
+          displayName: 'Publish ZAP Scan Results'
+          condition: succeededOrFailed()
+      
+        - task: DownloadSecureFile@1
+          name: grafanaDeployScriptFile
+          displayName: 'Download .grafana script'
+          inputs:
+            secureFile: 'grafana.sh'
         - script: |
-            npx semantic-release
-          displayName: 'Run Semantic Release'
-          continueOnError: true
+            chmod +x $(grafanaDeployScriptFile.secureFilePath)
 
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: $(azureSubscription)
+            scriptType: 'bash'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              az aks get-credentials --resource-group rg-ecommerce-prod --name aks-ecommerce-prod --file $(Agent.TempDirectory)/kubeconfig --overwrite-existing
+              echo "Kubeconfig stored at $(Agent.TempDirectory)/kubeconfig"
+          displayName: 'Get AKS Credentials'
+
+        - task: Bash@3
+          displayName: 'Execute .grafana script'
+          inputs:
+            filePath: $(grafanaDeployScriptFile.secureFilePath)
+          env:
+            KUBECONFIG: $(Agent.TempDirectory)/kubeconfig
+
+    - job: Semantic_Release
+      pool:
+        vmImage: 'ubuntu-latest'
+      dependsOn: Run_E2E_Tests
+      steps:
+
+            - checkout: self
+              fetchDepth: 0
+
+            - task: NodeTool@0
+              displayName: 'Use Node.js 20.x'
+              inputs:
+                versionSpec: '20.x' 
+
+            - script: |
+                npm ci
+              displayName: 'Install Dependencies'
+
+
+            - script: |
+                npx semantic-release
+              displayName: 'Run Semantic Release'
+              continueOnError: true
