@@ -228,7 +228,7 @@ stages:
 
         - task: AzureCLI@2
           inputs:
-            azureSubscription: $(azureSubscription)
+            azureSubscription: 'ecommerce-connection-manual'
             scriptType: 'bash'
             scriptLocation: 'inlineScript'
             inlineScript: |
