@@ -181,6 +181,11 @@ stages:
               fi
 
 
+        - task: CmdLine@2
+          inputs:
+            script: 'npm install newman-reporter-html'
+          
+
         - task: NewmanPostman@4
           inputs:
             collectionSourceType: 'file'
