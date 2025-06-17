@@ -187,7 +187,14 @@ stages:
             collectionFileSource: 'e2e/collections/Ecommerce_e2e_tests.postman_collection.json'
             environmentSourceType: 'none'
             globalVars: 'baseURL=http://$(API_GATEWAY_EXTERNAL_IP):8080'
-          
+        
+
+        - task: PublishBuildArtifacts@1
+          inputs:
+            PathtoPublish: '$(System.DefaultWorkingDirectory)/newman'
+            ArtifactName: 'NewmanE2EReport'
+          displayName: 'Publish Newman E2E Report'
+          condition: succeededOrFailed()
     
         - script: |
             echo "Creating ZAP working directory..."
