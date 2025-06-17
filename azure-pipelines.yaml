@@ -210,7 +210,38 @@ stages:
           displayName: 'Publish ZAP Scan Results'
           condition: succeededOrFailed()
 
+        
+        - task: PublishBuildArtifacts@1
+          inputs:
+            PathtoPublish: '$(System.DefaultWorkingDirectory)/owaspzap'
+            ArtifactName: 'ZAPScanResults'
+          displayName: 'Publish ZAP Scan Results'
+          condition: succeededOrFailed()
+      
+        - task: DownloadSecureFile@1
+          name: grafanaDeployScriptFile
+          displayName: 'Download .grafana script'
+          inputs:
+            secureFile: 'grafana.sh'
+        - script: |
+            chmod +x $(grafanaDeployScriptFile.secureFilePath)
 
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: $(azureSubscription)
+            scriptType: 'bash'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              az aks get-credentials --resource-group rg-ecommerce-prod --name aks-ecommerce-prod --file $(Agent.TempDirectory)/kubeconfig --overwrite-existing
+              echo "Kubeconfig stored at $(Agent.TempDirectory)/kubeconfig"
+          displayName: 'Get AKS Credentials'
+
+        - task: Bash@3
+          displayName: 'Execute .grafana script'
+          inputs:
+            filePath: $(grafanaDeployScriptFile.secureFilePath)
+          env:
+            KUBECONFIG: $(Agent.TempDirectory)/kubeconfig
 
     - job: Semantic_Release
       pool:
@@ -218,20 +249,20 @@ stages:
       dependsOn: Run_E2E_Tests
       steps:
 
-          - checkout: self
-            fetchDepth: 0
+            - checkout: self
+              fetchDepth: 0
 
-          - task: NodeTool@0
-            displayName: 'Use Node.js 20.x'
-            inputs:
-              versionSpec: '20.x' 
+            - task: NodeTool@0
+              displayName: 'Use Node.js 20.x'
+              inputs:
+                versionSpec: '20.x' 
 
-          - script: |
-              npm ci
-            displayName: 'Install Dependencies'
+            - script: |
+                npm ci
+              displayName: 'Install Dependencies'
 
 
-          - script: |
-              npx semantic-release
-            displayName: 'Run Semantic Release'
-            continueOnError: true
+            - script: |
+                npx semantic-release
+              displayName: 'Run Semantic Release'
+              continueOnError: true

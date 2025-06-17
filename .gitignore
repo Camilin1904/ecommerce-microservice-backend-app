@@ -32,6 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 
+grafana.sh
 # Locust Python cache and virtual environment
 locust/__pycache__/
 locust/venv/
