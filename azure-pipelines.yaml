@@ -217,31 +217,6 @@ stages:
             ArtifactName: 'ZAPScanResults'
           displayName: 'Publish ZAP Scan Results'
           condition: succeededOrFailed()
-      
-        - task: DownloadSecureFile@1
-          name: grafanaDeployScriptFile
-          displayName: 'Download .grafana script'
-          inputs:
-            secureFile: 'grafana.sh'
-        - script: |
-            chmod +x $(grafanaDeployScriptFile.secureFilePath)
-
-        - task: AzureCLI@2
-          inputs:
-            azureSubscription: 'ecommerce-connection-manual'
-            scriptType: 'bash'
-            scriptLocation: 'inlineScript'
-            inlineScript: |
-              az aks get-credentials --resource-group rg-ecommerce-prod --name aks-ecommerce-prod --file $(Agent.TempDirectory)/kubeconfig --overwrite-existing
-              echo "Kubeconfig stored at $(Agent.TempDirectory)/kubeconfig"
-          displayName: 'Get AKS Credentials'
-
-        - task: Bash@3
-          displayName: 'Execute .grafana script'
-          inputs:
-            filePath: $(grafanaDeployScriptFile.secureFilePath)
-          env:
-            KUBECONFIG: $(Agent.TempDirectory)/kubeconfig
 
     - job: Semantic_Release
       pool:
